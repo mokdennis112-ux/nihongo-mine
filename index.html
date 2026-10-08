@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nihongo Mine - 個人日語生字採集庫</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Google Identity Services & GAPI -->
+    <script src="https://accounts.google.com/gsi/client" async defer onload="gisLoaded()"></script>
+    <script src="https://apis.google.com/js/api.js" async defer onload="gapiLoaded()"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        sakura: {
+                            50: '#fff5f7',
+                            100: '#ffe3ec',
+                            200: '#fccada',
+                            400: '#f36890',
+                            500: '#e83e6b',
+                            600: '#d52150',
+                            900: '#4c0819',
+                        },
+                        japan: {
+                            50: '#f4f7f9',
+                            100: '#e3e9ef',
+                            600: '#2c3e50',
+                            800: '#1a252f',
+                            900: '#0f171e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Noto Sans TC', 'Noto Sans JP', 'sans-serif'],
+                        jp: ['Noto Sans JP', 'Noto Sans TC', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.3); border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); }
+
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+
+        .sakura-pattern {
+            background-image: radial-gradient(circle at 100% 150%, transparent 20%, rgba(232, 62, 107, 0.03) 21%, rgba(232, 62, 107, 0.03) 34%, transparent 35%, transparent),
+                              radial-gradient(circle at 0% 150%, transparent 20%, rgba(232, 62, 107, 0.03) 21%, rgba(232, 62, 107, 0.03) 34%, transparent 35%, transparent);
+            background-size: 40px 20px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-japan-900 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col transition-colors duration-300 sakura-pattern">
+
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-japan-800/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-700/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-2">
+                
+                <!-- Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('add')">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sakura-500 to-sakura-400 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-sakura-500/25">
+                        <i data-lucide="flower-2" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <span class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-sakura-600 to-rose-500 dark:from-sakura-400 dark:to-rose-300 bg-clip-text text-transparent">Nihongo Mine</span>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-400 hidden sm:block">個人日常日語生字採集庫</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <nav class="hidden md:flex space-x-1 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200/60 dark:border-slate-700/50">
+                    <button id="nav-add" onclick="switchTab('add')" class="nav-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 text-sakura-600 bg-white dark:bg-slate-700 shadow-sm">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i> 新增採集
+                    </button>
+                    <button id="nav-gallery" onclick="switchTab('gallery')" class="nav-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                        <i data-lucide="library" class="w-4 h-4"></i> 生字卡片庫 (<span id="total-count-nav">0</span>)
+                    </button>
+                    <button id="nav-cards" onclick="switchTab('cards')" class="nav-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                        <i data-lucide="layers" class="w-4 h-4"></i> Flashcards 溫習
+                    </button>
+                </nav>
+
+                <!-- Actions Right -->
+                <div class="flex items-center space-x-2">
+                    <button onclick="syncToGoogleDrive()" class="px-3.5 py-2 rounded-xl bg-sakura-500 hover:bg-sakura-600 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm">
+                        <i data-lucide="cloud-upload" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Google Drive 同步</span>
+                    </button>
+                    <button onclick="openBackupModal()" class="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 transition-colors">
+                        <i data-lucide="hard-drive" class="w-4 h-4 text-sakura-500"></i>
+                        <span class="hidden sm:inline">備份/匯入</span>
+                    </button>
+
+                    <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
+                        <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Bar -->
+        <div class="md:hidden flex border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-japan-800 px-2 py-1.5 justify-around text-xs font-semibold">
+            <button id="mob-add" onclick="switchTab('add')" class="mob-btn flex flex-col items-center py-1 px-3 text-sakura-600">
+                <i data-lucide="plus-circle" class="w-5 h-5 mb-0.5"></i> 新增採集
+            </button>
+            <button id="mob-gallery" onclick="switchTab('gallery')" class="mob-btn flex flex-col items-center py-1 px-3 text-slate-500">
+                <i data-lucide="library" class="w-5 h-5 mb-0.5"></i> 生字卡片庫
+            </button>
+            <button id="mob-cards" onclick="switchTab('cards')" class="mob-btn flex flex-col items-center py-1 px-3 text-slate-500">
+                <i data-lucide="layers" class="w-5 h-5 mb-0.5"></i> Flashcards
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <div id="view-add" class="tab-view space-y-6 max-w-3xl mx-auto">
+            
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-700/80 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-6">
+                
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-2 rounded-xl bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500">
+                            <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100">新增日語採集單詞</h2>
+                            <p class="text-xs text-slate-400">輸入日常看動漫、日劇或閱讀時採集的生字</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="clearForm()" class="text-xs text-slate-400 hover:text-rose-500 font-semibold flex items-center gap-1">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> 清空欄位
+                    </button>
+                </div>
+
+                <form id="vocab-form" onsubmit="handleVocabSubmit(event)" class="space-y-5">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-sakura-500"></span> 1. 採集到的日文單詞 *
+                            </label>
+                            <input type="text" id="input-word" required placeholder="例：木漏れ日, 恋愛" 
+                                class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp font-bold text-lg focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-sakura-400"></span> 4. 單詞讀音 / 平假名
+                            </label>
+                            <input type="text" id="input-reading" placeholder="例：こもれび, れんあい" 
+                                class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-sakura-500"></span> 2. 中文 / 廣東話釋義 *
+                        </label>
+                        <input type="text" id="input-definition" required placeholder="例：樹葉縫隙間透出的日光" 
+                            class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-sakura-500"></span> 3. 採集到的原句 (Mined Sentence) *
+                        </label>
+                        <textarea id="input-sentence" rows="2" required placeholder="例：木漏れ日がきれいに差し込んでいる。" 
+                            class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+                        
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
+                                <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 5. 上載例句音訊 (Audio)</span>
+                                <span id="audio-filename" class="text-[10px] text-slate-400 font-mono">未選擇檔案</span>
+                            </label>
+                            
+                            <div id="drop-zone-audio" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-4 text-center transition-all cursor-pointer">
+                                <input type="file" id="file-audio" accept="audio/*" onchange="handleAudioUpload(event)" class="hidden">
+                                
+                                <div id="audio-preview-container" class="hidden space-y-2">
+                                    <audio id="audio-element" controls class="w-full h-8 max-w-full"></audio>
+                                    <button type="button" onclick="clearAudio(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除音訊
+                                    </button>
+                                </div>
+
+                                <div id="audio-prompt" onclick="document.getElementById('file-audio').click()" class="py-2">
+                                    <i data-lucide="upload-cloud" class="w-7 h-7 mx-auto text-slate-400 mb-1"></i>
+                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">點擊選擇 或 拖放 MP3/M4A 音訊</p>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">音訊將安全儲存在瀏覽器本機庫</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
+                                <span class="flex items-center gap-1.5"><i data-lucide="image" class="w-4 h-4 text-sakura-500"></i> 6. 上載參考截圖 (Photo)</span>
+                                <span id="image-filename" class="text-[10px] text-slate-400 font-mono">未選擇檔案</span>
+                            </label>
+
+                            <div id="drop-zone-image" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-4 text-center transition-all cursor-pointer">
+                                <input type="file" id="file-image" accept="image/*" onchange="handleImageUpload(event)" class="hidden">
+                                
+                                <div id="image-preview-container" class="hidden space-y-2">
+                                    <img id="image-element" src="" class="max-h-28 mx-auto rounded-xl shadow-md border border-slate-200 dark:border-slate-700 object-cover">
+                                    <button type="button" onclick="clearImage(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除截圖
+                                    </button>
+                                </div>
+
+                                <div id="image-prompt" onclick="document.getElementById('file-image').click()" class="py-2">
+                                    <i data-lucide="camera" class="w-7 h-7 mx-auto text-slate-400 mb-1"></i>
+                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">點擊選擇、拖放 或 Ctrl+V 貼上圖片</p>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">可直接從剪貼簿貼上動漫/影片截圖</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="pt-4">
+                        <button type="submit" class="w-full py-4 bg-gradient-to-r from-sakura-500 to-rose-500 hover:from-sakura-600 hover:to-rose-600 text-white font-extrabold text-base rounded-2xl shadow-lg shadow-sakura-500/25 transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="check-circle" class="w-5 h-5"></i> 保存採集卡片 (Save to IndexedDB)
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <div id="view-gallery" class="tab-view hidden space-y-6">
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200/80 dark:border-slate-700/80 space-y-4">
+                <div class="flex flex-col sm:flex-row items-center gap-3">
+                    <div class="relative w-full">
+                        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5"></i>
+                        <input type="text" id="search-input" oninput="renderGallery()" placeholder="搜尋日文單詞、讀音、中文釋義或例句..." 
+                            class="w-full pl-12 pr-10 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50">
+                    </div>
+
+                    <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                        <button id="filter-audio-btn" onclick="toggleMediaFilter('audio')" class="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                            <i data-lucide="music" class="w-3.5 h-3.5 text-sakura-500"></i> 有音訊
+                        </button>
+                        <button id="filter-image-btn" onclick="toggleMediaFilter('image')" class="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-rose-500"></i> 有截圖
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between px-2 text-xs font-semibold text-slate-500">
+                <span>採集數量: <strong id="gallery-count" class="text-sakura-600 dark:text-sakura-400">0</strong> 個</span>
+                <span>儲存位置: 瀏覽器本地 IndexedDB</span>
+            </div>
+
+            <div id="gallery-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+            <div id="gallery-empty" class="hidden text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
+                <i data-lucide="inbox" class="w-12 h-12 mx-auto text-slate-300 mb-3"></i>
+                <h3 class="font-bold text-slate-700 dark:text-slate-300">目前未有採集卡片</h3>
+                <p class="text-xs text-slate-400 mt-1">切換至「新增採集」頁面開始建立第一個日語單詞！</p>
+            </div>
+        </div>
+
+        <div id="view-cards" class="tab-view hidden max-w-2xl mx-auto space-y-6">
+            <div class="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 rounded-xl bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500">
+                        <i data-lucide="layers" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">Flashcards 雙面溫習</h3>
+                        <p id="fc-status" class="text-xs text-slate-400">進度: 0 / 0</p>
+                    </div>
+                </div>
+                <button onclick="shuffleDeck()" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition-colors flex items-center gap-1.5">
+                    <i data-lucide="shuffle" class="w-3.5 h-3.5"></i> 隨機打亂
+                </button>
+            </div>
+
+            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                <div id="fc-progress" class="bg-sakura-500 h-2 transition-all duration-300 w-0"></div>
+            </div>
+
+            <div class="perspective-1000 min-h-[380px]">
+                <div id="flashcard-3d" onclick="flipFlashcard()" class="transform-style-3d relative w-full h-96 sm:h-[420px] rounded-3xl cursor-pointer transition-transform duration-500 shadow-xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-800">
+                    
+                    <div class="backface-hidden absolute inset-0 p-6 sm:p-8 flex flex-col justify-between items-center text-center">
+                        <div class="w-full flex justify-between items-center text-xs font-semibold text-slate-400">
+                            <span>正面：單詞與發音</span>
+                            <button id="fc-audio-btn" onclick="event.stopPropagation(); playCurrentCardAudio()" class="p-2 rounded-xl bg-sakura-50 text-sakura-600 hover:bg-sakura-100 transition-colors">
+                                <i data-lucide="volume-2" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+
+                        <div class="my-auto space-y-4 w-full">
+                            <ruby id="fc-word" class="text-4xl sm:text-5xl font-black text-slate-800 dark:text-slate-100 font-jp tracking-wide">
+                                漢字 <rt id="fc-reading" class="text-base text-sakura-500 font-medium">かんじ</rt>
+                            </ruby>
+                            <p id="fc-sentence" class="text-sm font-jp text-slate-500 dark:text-slate-400 italic max-w-md mx-auto line-clamp-3">「採集例句」</p>
+                        </div>
+
+                        <p class="text-xs text-slate-400 flex items-center gap-1">
+                            <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> 點擊卡片翻看中文釋義與畫面
+                        </p>
+                    </div>
+
+                    <div class="backface-hidden rotate-y-180 absolute inset-0 p-6 sm:p-8 flex flex-col justify-between items-center text-center bg-gradient-to-b from-slate-50 to-white dark:from-slate-800/90 dark:to-slate-800 rounded-3xl">
+                        <div class="w-full text-xs font-semibold text-slate-400 text-right">
+                            背面：釋義與參考圖片
+                        </div>
+
+                        <div class="my-auto space-y-4 w-full">
+                            <h3 id="fc-definition" class="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-slate-100">中文釋義</h3>
+                            <div id="fc-image-box" class="hidden">
+                                <img id="fc-image" class="max-h-36 rounded-xl border border-slate-200 dark:border-slate-700 mx-auto shadow-md object-cover">
+                            </div>
+                        </div>
+
+                        <div class="w-full text-xs text-slate-400">
+                            快捷鍵：按 [Space] 翻頁，[← / →] 切換卡片
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-4">
+                <button onclick="prevFlashcard()" class="px-5 py-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 transition-all text-xs sm:text-sm flex items-center gap-2">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> 上一張
+                </button>
+                <button onclick="nextFlashcard()" class="px-5 py-3 rounded-2xl bg-sakura-500 hover:bg-sakura-600 text-white font-bold transition-all text-xs sm:text-sm flex items-center gap-2 shadow-md shadow-sakura-500/20">
+                    下一張 <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- BACKUP MODAL -->
+    <div id="backup-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 dark:border-slate-700">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-4">
+                <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <i data-lucide="hard-drive" class="w-5 h-5 text-sakura-500"></i> 生字庫數據備份與匯入
+                </h3>
+                <button onclick="closeBackupModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 space-y-2">
+                    <h4 class="font-bold text-xs uppercase text-slate-500">匯出完整 JSON 備份檔</h4>
+                    <p class="text-xs text-slate-500">導出包含所有音訊與截圖的完整數據檔案。</p>
+                    <button onclick="exportBackupJSON()" class="w-full py-2.5 bg-sakura-500 hover:bg-sakura-600 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2">
+                        <i data-lucide="download" class="w-4 h-4"></i> 下載 JSON 備份檔
+                    </button>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 space-y-2">
+                    <h4 class="font-bold text-xs uppercase text-slate-500">匯入舊有 JSON 備份</h4>
+                    <input type="file" id="input-import-json" accept=".json" onchange="importBackupJSON(event)" class="hidden">
+                    <button onclick="document.getElementById('input-import-json').click()" class="w-full py-2.5 bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-800 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2">
+                        <i data-lucide="upload" class="w-4 h-4"></i> 選擇 JSON 檔案匯入
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX IMAGE MODAL -->
+    <div id="image-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer" onclick="closeImageModal()">
+        <img id="lightbox-image" src="" class="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain">
+    </div>
+
+    <script>
+        /* ==========================================================================
+           GOOGLE DRIVE API & OAUTH SYNC CONFIG
+           ========================================================================== */
+        // 請將以下 CLIENT_ID 替換為你的 Google Cloud Console Client ID
+        const CLIENT_ID = '263970342404-v3br9qeutdfr89jov50rd6uo4hi5gc69.apps.googleusercontent.com';
+        const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
+
+        let tokenClient;
+        let gapiInited = false;
+        let gsisInited = false;
+
+        function gapiLoaded() {
+            gapi.load('client', async () => {
+                await gapi.client.init({
+                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                });
+                gapiInited = true;
+            });
+        }
+
+        function gisLoaded() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: '',
+            });
+            gsisInited = true;
+        }
+
+        async function syncToGoogleDrive() {
+            if (!gapiInited || !gsisInited) {
+                alert('Google API 仍在載入中，請稍候再試...');
+                return;
+            }
+
+            tokenClient.callback = async (resp) => {
+                if (resp.error) {
+                    alert('Google 授權失敗！');
+                    return;
+                }
+                await downloadAndMergeFromDriveAppData();
+                await uploadToDriveAppData();
+            };
+
+            if (gapi.client.getToken() === null) {
+                tokenClient.requestAccessToken({ prompt: 'consent' });
+            } else {
+                tokenClient.requestAccessToken({ prompt: '' });
+            }
+        }
+
+        async function uploadToDriveAppData() {
+            const allData = await dbGetAll();
+            const fileContent = JSON.stringify(allData);
+            const file = new Blob([fileContent], { type: 'application/json' });
+
+            const response = await gapi.client.drive.files.list({
+                q: "name='nihongo_mine_data.json' and 'appDataFolder' in parents",
+                spaces: 'appDataFolder',
+                fields: 'files(id, name)',
+            });
+
+            const existingFiles = response.result.files;
+            let fileId = existingFiles.length > 0 ? existingFiles[0].id : null;
+
+            const metadata = {
+                name: 'nihongo_mine_data.json',
+                mimeType: 'application/json',
+                parents: fileId ? [] : ['appDataFolder'],
+            };
+
+            const accessToken = gapi.client.getToken().access_token;
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', file);
+
+            const url = fileId
+                ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`
+                : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+
+            await fetch(url, {
+                method: fileId ? 'PATCH' : 'POST',
+                headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
+                body: form,
+            });
+
+            alert('Google Drive 雙向同步成功！');
+        }
+
+        async function downloadAndMergeFromDriveAppData() {
+            const response = await gapi.client.drive.files.list({
+                q: "name='nihongo_mine_data.json' and 'appDataFolder' in parents",
+                spaces: 'appDataFolder',
+                fields: 'files(id, name)',
+            });
+
+            const files = response.result.files;
+            if (files.length === 0) return;
+
+            const fileId = files[0].id;
+            const res = await gapi.client.drive.files.get({
+                fileId: fileId,
+                alt: 'media',
+            });
+
+            const remoteData = res.result;
+            if (Array.isArray(remoteData)) {
+                for (let item of remoteData) {
+                    await dbSaveVocab(item);
+                }
+                await loadVocabs();
+            }
+        }
+
+        /* ==========================================================================
+           INDEXEDDB PERSISTENCE LAYER
+           ========================================================================== */
+        const DB_NAME = 'NihongoMineLocalDB';
+        const DB_VERSION = 1;
+        let db = null;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const database = e.target.result;
+                    if (!database.objectStoreNames.contains('vocabs')) {
+                        database.createObjectStore('vocabs', { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve(db);
+                };
+                request.onerror = (e) => reject(e);
+            });
+        }
+
+        function dbSaveVocab(vocab) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('vocabs', 'readwrite');
+                const store = tx.objectStore('vocabs');
+                store.put(vocab);
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e);
+            });
+        }
+
+        function dbGetAll() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('vocabs', 'readonly');
+                const store = tx.objectStore('vocabs');
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = (e) => reject(e);
+            });
+        }
+
+        function dbDelete(id) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('vocabs', 'readwrite');
+                const store = tx.objectStore('vocabs');
+                store.delete(id);
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e);
+            });
+        }
+
+        /* ==========================================================================
+           APPLICATION STATE
+           ========================================================================== */
+        let state = {
+            vocabs: [],
+            currentTab: 'add',
+            mediaFilters: { audio: false, image: false },
+            currentAudio: null,
+            currentImage: null,
+            fcIndex: 0,
+            fcFlipped: false,
+            fcDeck: []
+        };
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            await initDB();
+            await loadVocabs();
+            setupDropAndPasteHandlers();
+
+            document.addEventListener('keydown', (e) => {
+                if (state.currentTab === 'cards') {
+                    if (e.key === 'ArrowRight') nextFlashcard();
+                    if (e.key === 'ArrowLeft') prevFlashcard();
+                    if (e.key === ' ') {
+                        e.preventDefault();
+                        flipFlashcard();
+                    }
+                }
+            });
+        });
+
+        async function loadVocabs() {
+            const list = await dbGetAll();
+            state.vocabs = list.sort((a, b) => b.createdAt - a.createdAt);
+            document.getElementById('total-count-nav').textContent = state.vocabs.length;
+            renderGallery();
+        }
+
+        function setupDropAndPasteHandlers() {
+            document.addEventListener('paste', (e) => {
+                if (state.currentTab !== 'add') return;
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                for (let item of items) {
+                    if (item.type.indexOf('image') !== -1) {
+                        const blob = item.getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            state.currentImage = event.target.result;
+                            document.getElementById('image-element').src = state.currentImage;
+                            document.getElementById('image-prompt').classList.add('hidden');
+                            document.getElementById('image-preview-container').classList.remove('hidden');
+                            document.getElementById('image-filename').textContent = '剪貼簿貼上圖片';
+                        };
+                        reader.readAsDataURL(blob);
+                    }
+                }
+            });
+
+            const audioZone = document.getElementById('drop-zone-audio');
+            audioZone.addEventListener('dragover', (e) => { e.preventDefault(); audioZone.classList.add('border-sakura-500'); });
+            audioZone.addEventListener('dragleave', () => audioZone.classList.remove('border-sakura-500'));
+            audioZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                audioZone.classList.remove('border-sakura-500');
+                const files = e.dataTransfer.files;
+                if (files.length && files[0].type.startsWith('audio/')) {
+                    processAudioFile(files[0]);
+                }
+            });
+
+            const imageZone = document.getElementById('drop-zone-image');
+            imageZone.addEventListener('dragover', (e) => { e.preventDefault(); imageZone.classList.add('border-sakura-500'); });
+            imageZone.addEventListener('dragleave', () => imageZone.classList.remove('border-sakura-500'));
+            imageZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                imageZone.classList.remove('border-sakura-500');
+                const files = e.dataTransfer.files;
+                if (files.length && files[0].type.startsWith('image/')) {
+                    processImageFile(files[0]);
+                }
+            });
+        }
+
+        function processAudioFile(file) {
+            const r = new FileReader();
+            r.onload = (ev) => {
+                state.currentAudio = ev.target.result;
+                document.getElementById('audio-element').src = state.currentAudio;
+                document.getElementById('audio-prompt').classList.add('hidden');
+                document.getElementById('audio-preview-container').classList.remove('hidden');
+                document.getElementById('audio-filename').textContent = file.name;
+            };
+            r.readAsDataURL(file);
+        }
+
+        function handleAudioUpload(e) {
+            const file = e.target.files[0];
+            if (file) processAudioFile(file);
+        }
+
+        function clearAudio(e) {
+            if (e) e.stopPropagation();
+            state.currentAudio = null;
+            document.getElementById('file-audio').value = '';
+            document.getElementById('audio-prompt').classList.remove('hidden');
+            document.getElementById('audio-preview-container').classList.add('hidden');
+            document.getElementById('audio-filename').textContent = '未選擇檔案';
+        }
+
+        function processImageFile(file) {
+            const r = new FileReader();
+            r.onload = (ev) => {
+                state.currentImage = ev.target.result;
+                document.getElementById('image-element').src = state.currentImage;
+                document.getElementById('image-prompt').classList.add('hidden');
+                document.getElementById('image-preview-container').classList.remove('hidden');
+                document.getElementById('image-filename').textContent = file.name;
+            };
+            r.readAsDataURL(file);
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) processImageFile(file);
+        }
+
+        function clearImage(e) {
+            if (e) e.stopPropagation();
+            state.currentImage = null;
+            document.getElementById('file-image').value = '';
+            document.getElementById('image-prompt').classList.remove('hidden');
+            document.getElementById('image-preview-container').classList.add('hidden');
+            document.getElementById('image-filename').textContent = '未選擇檔案';
+        }
+
+        function clearForm() {
+            document.getElementById('vocab-form').reset();
+            clearAudio();
+            clearImage();
+        }
+
+        async function handleVocabSubmit(e) {
+            e.preventDefault();
+
+            const word = document.getElementById('input-word').value.trim();
+            const reading = document.getElementById('input-reading').value.trim();
+            const definition = document.getElementById('input-definition').value.trim();
+            const sentence = document.getElementById('input-sentence').value.trim();
+
+            const entry = {
+                id: 'vocab_' + Date.now(),
+                word,
+                reading,
+                definition,
+                sentence,
+                audio: state.currentAudio,
+                image: state.currentImage,
+                createdAt: Date.now()
+            };
+
+            await dbSaveVocab(entry);
+            await loadVocabs();
+            clearForm();
+
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 35, spread: 50 });
+            }
+
+            switchTab('gallery');
+        }
+
+        function switchTab(tabId) {
+            state.currentTab = tabId;
+            document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(`view-${tabId}`)?.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'dark:bg-slate-700', 'text-sakura-600', 'shadow-sm');
+                btn.classList.add('text-slate-600', 'dark:text-slate-300');
+            });
+            document.getElementById(`nav-${tabId}`)?.classList.add('bg-white', 'dark:bg-slate-700', 'text-sakura-600', 'shadow-sm');
+
+            if (tabId === 'cards') setupFlashcards();
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        function toggleMediaFilter(type) {
+            state.mediaFilters[type] = !state.mediaFilters[type];
+            const btn = document.getElementById(`filter-${type}-btn`);
+            if (state.mediaFilters[type]) {
+                btn.classList.add('bg-sakura-50', 'dark:bg-sakura-900/40', 'border-sakura-300', 'text-sakura-600');
+            } else {
+                btn.classList.remove('bg-sakura-50', 'dark:bg-sakura-900/40', 'border-sakura-300', 'text-sakura-600');
+            }
+            renderGallery();
+        }
+
+        function renderGallery() {
+            const query = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+
+            let filtered = state.vocabs.filter(v => {
+                if (state.mediaFilters.audio && !v.audio) return false;
+                if (state.mediaFilters.image && !v.image) return false;
+                if (query) {
+                    return v.word.toLowerCase().includes(query) ||
+                           (v.reading || '').toLowerCase().includes(query) ||
+                           v.definition.toLowerCase().includes(query) ||
+                           v.sentence.toLowerCase().includes(query);
+                }
+                return true;
+            });
+
+            document.getElementById('gallery-count').textContent = filtered.length;
+            const grid = document.getElementById('gallery-grid');
+            const empty = document.getElementById('gallery-empty');
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            grid.innerHTML = filtered.map(v => `
+                <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex items-start justify-between">
+                            <ruby class="text-3xl font-black text-slate-800 dark:text-slate-100 font-jp">
+                                ${v.word}
+                                ${v.reading ? `<rt class="text-xs text-sakura-500 font-normal">${v.reading}</rt>` : ''}
+                            </ruby>
+                            <button onclick="deleteEntry('${v.id}')" class="text-slate-300 hover:text-rose-500 p-1 transition-colors" title="刪除">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200 mt-2">${v.definition}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-jp italic bg-slate-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50 mt-3">「${v.sentence}」</p>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            ${v.audio ? `
+                                <button onclick="playVocabAudio('${v.id}')" class="px-3 py-1.5 rounded-xl bg-sakura-50 text-sakura-600 hover:bg-sakura-100 text-xs font-bold flex items-center gap-1 transition-colors">
+                                    <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> 播放音訊
+                                </button>
+                            ` : `<button onclick="speakJapanese('${v.word}')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 text-xs font-bold flex items-center gap-1 transition-colors">
+                                    <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> TTS 發音
+                                </button>`}
+
+                            ${v.image ? `
+                                <button onclick="openImageModal('${v.image}')" class="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-bold flex items-center gap-1 transition-colors">
+                                    <i data-lucide="image" class="w-3.5 h-3.5"></i> 檢視圖片
+                                </button>
+                            ` : ''}
+                        </div>
+                        <span class="text-[10px] text-slate-400">${new Date(v.createdAt).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        async function deleteEntry(id) {
+            if (confirm('確定要刪除這張採集卡片嗎？')) {
+                await dbDelete(id);
+                await loadVocabs();
+            }
+        }
+
+        function playVocabAudio(id) {
+            const v = state.vocabs.find(x => x.id === id);
+            if (v && v.audio) {
+                const audio = new Audio(v.audio);
+                audio.play();
+            }
+        }
+
+        function speakJapanese(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'ja-JP';
+                window.speechSynthesis.speak(u);
+            }
+        }
+
+        function openImageModal(src) {
+            document.getElementById('lightbox-image').src = src;
+            document.getElementById('image-modal').classList.remove('hidden');
+        }
+
+        function closeImageModal() {
+            document.getElementById('image-modal').classList.add('hidden');
+        }
+
+        function setupFlashcards() {
+            state.fcDeck = [...state.vocabs];
+            state.fcIndex = 0;
+            state.fcFlipped = false;
+            updateFlashcard();
+        }
+
+        function shuffleDeck() {
+            state.fcDeck.sort(() => Math.random() - 0.5);
+            state.fcIndex = 0;
+            updateFlashcard();
+        }
+
+        function flipFlashcard() {
+            state.fcFlipped = !state.fcFlipped;
+            const el = document.getElementById('flashcard-3d');
+            if (state.fcFlipped) el.classList.add('rotate-y-180');
+            else el.classList.remove('rotate-y-180');
+        }
+
+        function updateFlashcard() {
+            const el = document.getElementById('flashcard-3d');
+            el.classList.remove('rotate-y-180');
+            state.fcFlipped = false;
+
+            if (state.fcDeck.length === 0) {
+                document.getElementById('fc-word').childNodes[0].nodeValue = "未有卡片";
+                document.getElementById('fc-reading').textContent = "";
+                document.getElementById('fc-definition').textContent = "請先採集日語單詞！";
+                return;
+            }
+
+            const cur = state.fcDeck[state.fcIndex];
+            document.getElementById('fc-status').textContent = `進度: ${state.fcIndex + 1} / ${state.fcDeck.length}`;
+            document.getElementById('fc-progress').style.width = `${((state.fcIndex + 1) / state.fcDeck.length) * 100}%`;
+
+            document.getElementById('fc-word').childNodes[0].nodeValue = cur.word + ' ';
+            document.getElementById('fc-reading').textContent = cur.reading || '';
+            document.getElementById('fc-sentence').textContent = cur.sentence ? `「${cur.sentence}」` : '';
+            document.getElementById('fc-definition').textContent = cur.definition;
+
+            if (cur.image) {
+                document.getElementById('fc-image').src = cur.image;
+                document.getElementById('fc-image-box').classList.remove('hidden');
+            } else {
+                document.getElementById('fc-image-box').classList.add('hidden');
+            }
+        }
+
+        function playCurrentCardAudio() {
+            const cur = state.fcDeck[state.fcIndex];
+            if (!cur) return;
+            if (cur.audio) {
+                new Audio(cur.audio).play();
+            } else {
+                speakJapanese(cur.word);
+            }
+        }
+
+        function nextFlashcard() {
+            if (state.fcIndex < state.fcDeck.length - 1) state.fcIndex++;
+            else state.fcIndex = 0;
+            updateFlashcard();
+        }
+
+        function prevFlashcard() {
+            if (state.fcIndex > 0) state.fcIndex--;
+            else state.fcIndex = state.fcDeck.length - 1;
+            updateFlashcard();
+        }
+
+        function openBackupModal() { document.getElementById('backup-modal').classList.remove('hidden'); }
+        function closeBackupModal() { document.getElementById('backup-modal').classList.add('hidden'); }
+
+        function exportBackupJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.vocabs, null, 2));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", `nihongo_mine_backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(dl);
+            dl.click();
+            dl.remove();
+        }
+
+        function importBackupJSON(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const r = new FileReader();
+            r.onload = async (ev) => {
+                try {
+                    const list = JSON.parse(ev.target.result);
+                    if (Array.isArray(list)) {
+                        for (let item of list) {
+                            await dbSaveVocab(item);
+                        }
+                        await loadVocabs();
+                        alert(`成功匯入 ${list.length} 個生字卡片！`);
+                        closeBackupModal();
+                    }
+                } catch (err) {
+                    alert('匯入失敗：格式不正確');
+                }
+            };
+            r.readAsText(file);
+        }
+    </script>
+</body>
+</html>
