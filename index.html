@@ -103,7 +103,6 @@
                         <span id="sync-btn-text" class="hidden sm:inline">Google Drive 同步</span>
                     </button>
                     
-                    <!-- 登出按鈕 -->
                     <button id="logout-btn" onclick="logoutGoogleAccount()" class="hidden px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/50 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold flex items-center gap-1 transition-colors">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                         <span class="hidden sm:inline">登出</span>
@@ -167,10 +166,41 @@
                             <input type="text" id="input-word" required placeholder="例：木漏れ日, 恋愛" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp font-bold text-lg focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-sakura-400"></span> 4. 單詞讀音 / 平假名
-                            </label>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-sakura-400"></span> 4. 單詞讀音 / 平假名
+                                </label>
+                                <button type="button" onclick="autoGenerateReading('input-word', 'input-reading')" class="text-[11px] font-semibold text-sakura-600 dark:text-sakura-400 hover:underline flex items-center gap-1">
+                                    <i data-lucide="wand-2" class="w-3 h-3"></i> 自動生成讀音
+                                </button>
+                            </div>
                             <input type="text" id="input-reading" placeholder="例：こもれび, れんあい" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-sakura-500"></span> 詞性 (Part of Speech)
+                            </label>
+                            <select id="input-pos" onchange="toggleVerbTypeVisibility('input-pos', 'verb-type-container')" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                                <option value="">-- 請選擇詞性 --</option>
+                                <option value="名詞">名詞</option>
+                                <option value="動詞">動詞</option>
+                                <option value="形容詞">形容詞 (い形)</option>
+                                <option value="形容動詞">形容動詞 (な形)</option>
+                            </select>
+                        </div>
+                        <div id="verb-type-container" class="hidden">
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-sakura-400"></span> 動詞分類 (Verb Type)
+                            </label>
+                            <select id="input-verb-type" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                                <option value="">-- 請選擇動詞分類 --</option>
+                                <option value="自動詞">自動詞</option>
+                                <option value="他動詞">他動詞</option>
+                                <option value="自他動詞">自他動詞</option>
+                            </select>
                         </div>
                     </div>
 
@@ -189,7 +219,6 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
-                        
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
                                 <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 5. 上載例句音訊 (Audio)</span>
@@ -237,7 +266,6 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
 
                     <div class="pt-4">
@@ -357,6 +385,124 @@
         </div>
 
     </main>
+
+    <!-- EDIT MODAL -->
+    <div id="edit-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-5 shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-3">
+                <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-sakura-500"></i> 編輯採集卡片
+                </h3>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="edit-form" onsubmit="handleEditSubmit(event)" class="space-y-4">
+                <input type="hidden" id="edit-id">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">日文單詞 *</label>
+                        <input type="text" id="edit-word" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 font-jp font-bold">
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">平假名 / 讀音</label>
+                            <button type="button" onclick="autoGenerateReading('edit-word', 'edit-reading')" class="text-[11px] font-semibold text-sakura-600 hover:underline flex items-center gap-1">
+                                <i data-lucide="wand-2" class="w-3 h-3"></i> 自動生成
+                            </button>
+                        </div>
+                        <input type="text" id="edit-reading" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 font-jp">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">詞性</label>
+                        <select id="edit-pos" onchange="toggleVerbTypeVisibility('edit-pos', 'edit-verb-type-container')" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100">
+                            <option value="">-- 請選擇詞性 --</option>
+                            <option value="名詞">名詞</option>
+                            <option value="動詞">動詞</option>
+                            <option value="形容詞">形容詞 (い形)</option>
+                            <option value="形容動詞">形容動詞 (な形)</option>
+                        </select>
+                    </div>
+                    <div id="edit-verb-type-container" class="hidden">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">動詞分類</label>
+                        <select id="edit-verb-type" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100">
+                            <option value="">-- 請選擇動詞分類 --</option>
+                            <option value="自動詞">自動詞</option>
+                            <option value="他動詞">他動詞</option>
+                            <option value="自他動詞">自他動詞</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">中文 / 廣東話釋義 *</label>
+                    <input type="text" id="edit-definition" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">採集例句 *</label>
+                    <textarea id="edit-sentence" rows="2" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 font-jp"></textarea>
+                </div>
+
+                <!-- 編輯 modal 中的音訊及圖片上載區域 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 例句音訊</span>
+                            <span id="edit-audio-filename" class="text-[10px] text-slate-400 font-mono">未選擇檔案</span>
+                        </label>
+                        <div id="edit-drop-zone-audio" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
+                            <input type="file" id="edit-file-audio" accept="audio/*" onchange="handleEditAudioUpload(event)" class="hidden">
+                            
+                            <div id="edit-audio-preview-container" class="hidden space-y-2">
+                                <audio id="edit-audio-element" controls class="w-full h-8 max-w-full"></audio>
+                                <button type="button" onclick="clearEditAudio(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除音訊
+                                </button>
+                            </div>
+
+                            <div id="edit-audio-prompt" onclick="document.getElementById('edit-file-audio').click()" class="py-2">
+                                <i data-lucide="upload-cloud" class="w-6 h-6 mx-auto text-slate-400 mb-1"></i>
+                                <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">點擊選擇 或 拖放音訊</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i data-lucide="image" class="w-4 h-4 text-sakura-500"></i> 參考截圖</span>
+                            <span id="edit-image-filename" class="text-[10px] text-slate-400 font-mono">未選擇檔案</span>
+                        </label>
+                        <div id="edit-drop-zone-image" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
+                            <input type="file" id="edit-file-image" accept="image/*" onchange="handleEditImageUpload(event)" class="hidden">
+                            
+                            <div id="edit-image-preview-container" class="hidden space-y-2">
+                                <img id="edit-image-element" src="" class="max-h-24 mx-auto rounded-xl shadow-md border border-slate-200 dark:border-slate-700 object-cover">
+                                <button type="button" onclick="clearEditImage(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除截圖
+                                </button>
+                            </div>
+
+                            <div id="edit-image-prompt" onclick="document.getElementById('edit-file-image').click()" class="py-2">
+                                <i data-lucide="camera" class="w-6 h-6 mx-auto text-slate-400 mb-1"></i>
+                                <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">點擊選擇、拖放 或 Ctrl+V 貼上</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100">取消</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-sakura-500 hover:bg-sakura-600 text-white text-xs font-bold shadow-md">儲存修改並自動同步</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- BACKUP MODAL -->
     <div id="backup-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -579,7 +725,6 @@
 
                 const remoteData = res.result;
                 if (Array.isArray(remoteData)) {
-                    // 清空本地資料庫以完全對齊雲端（包含解決刪除卡片跨裝置同步問題）
                     await dbClearAll();
                     for (let item of remoteData) {
                         await dbSaveVocab(item);
@@ -594,6 +739,50 @@
                     console.error('Download from Drive error:', err);
                 }
                 throw err;
+            }
+        }
+
+        /* ==========================================================================
+           FURIGANA AUTO GENERATOR (API)
+           ========================================================================== */
+        async function autoGenerateReading(wordInputId, readingInputId) {
+            const word = document.getElementById(wordInputId).value.trim();
+            if (!word) {
+                alert('請先輸入日文單詞！');
+                return;
+            }
+
+            try {
+                const res = await fetch(`https://labs.goo.ne.jp/api/hiragana`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        app_id: 'DEMO', 
+                        sentence: word,
+                        output_type: 'hiragana'
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.converted) {
+                        document.getElementById(readingInputId).value = data.converted;
+                        return;
+                    }
+                }
+                document.getElementById(readingInputId).value = word;
+            } catch (e) {
+                alert('無法自動取得讀音，請手動輸入平假名。');
+            }
+        }
+
+        function toggleVerbTypeVisibility(posSelectId, containerId) {
+            const pos = document.getElementById(posSelectId).value;
+            const container = document.getElementById(containerId);
+            if (pos === '動詞') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
             }
         }
 
@@ -670,6 +859,8 @@
             mediaFilters: { audio: false, image: false },
             currentAudio: null,
             currentImage: null,
+            editAudio: null,
+            editImage: null,
             fcIndex: 0,
             fcFlipped: false,
             fcDeck: []
@@ -702,24 +893,32 @@
 
         function setupDropAndPasteHandlers() {
             document.addEventListener('paste', (e) => {
-                if (state.currentTab !== 'add') return;
                 const items = (e.clipboardData || e.originalEvent.clipboardData).items;
                 for (let item of items) {
                     if (item.type.indexOf('image') !== -1) {
                         const blob = item.getAsFile();
                         const reader = new FileReader();
                         reader.onload = (event) => {
-                            state.currentImage = event.target.result;
-                            document.getElementById('image-element').src = state.currentImage;
-                            document.getElementById('image-prompt').classList.add('hidden');
-                            document.getElementById('image-preview-container').classList.remove('hidden');
-                            document.getElementById('image-filename').textContent = '剪貼簿貼上圖片';
+                            if (state.currentTab === 'add') {
+                                state.currentImage = event.target.result;
+                                document.getElementById('image-element').src = state.currentImage;
+                                document.getElementById('image-prompt').classList.add('hidden');
+                                document.getElementById('image-preview-container').classList.remove('hidden');
+                                document.getElementById('image-filename').textContent = '剪貼簿貼上圖片';
+                            } else if (!document.getElementById('edit-modal').classList.contains('hidden')) {
+                                state.editImage = event.target.result;
+                                document.getElementById('edit-image-element').src = state.editImage;
+                                document.getElementById('edit-image-prompt').classList.add('hidden');
+                                document.getElementById('edit-image-preview-container').classList.remove('hidden');
+                                document.getElementById('edit-image-filename').textContent = '剪貼簿貼上圖片';
+                            }
                         };
                         reader.readAsDataURL(blob);
                     }
                 }
             });
 
+            // 新增採集拖放
             const audioZone = document.getElementById('drop-zone-audio');
             audioZone.addEventListener('dragover', (e) => { e.preventDefault(); audioZone.classList.add('border-sakura-500'); });
             audioZone.addEventListener('dragleave', () => audioZone.classList.remove('border-sakura-500'));
@@ -741,6 +940,31 @@
                 const files = e.dataTransfer.files;
                 if (files.length && files[0].type.startsWith('image/')) {
                     processImageFile(files[0]);
+                }
+            });
+
+            // 編輯 modal 拖放處理
+            const editAudioZone = document.getElementById('edit-drop-zone-audio');
+            editAudioZone.addEventListener('dragover', (e) => { e.preventDefault(); editAudioZone.classList.add('border-sakura-500'); });
+            editAudioZone.addEventListener('dragleave', () => editAudioZone.classList.remove('border-sakura-500'));
+            editAudioZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                editAudioZone.classList.remove('border-sakura-500');
+                const files = e.dataTransfer.files;
+                if (files.length && files[0].type.startsWith('audio/')) {
+                    processEditAudioFile(files[0]);
+                }
+            });
+
+            const editImageZone = document.getElementById('edit-drop-zone-image');
+            editImageZone.addEventListener('dragover', (e) => { e.preventDefault(); editImageZone.classList.add('border-sakura-500'); });
+            editImageZone.addEventListener('dragleave', () => editImageZone.classList.remove('border-sakura-500'));
+            editImageZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                editImageZone.classList.remove('border-sakura-500');
+                const files = e.dataTransfer.files;
+                if (files.length && files[0].type.startsWith('image/')) {
+                    processEditImageFile(files[0]);
                 }
             });
         }
@@ -797,8 +1021,62 @@
             document.getElementById('image-filename').textContent = '未選擇檔案';
         }
 
+        /* 編輯 Modal 音訊 / 圖片處理 */
+        function processEditAudioFile(file) {
+            const r = new FileReader();
+            r.onload = (ev) => {
+                state.editAudio = ev.target.result;
+                document.getElementById('edit-audio-element').src = state.editAudio;
+                document.getElementById('edit-audio-prompt').classList.add('hidden');
+                document.getElementById('edit-audio-preview-container').classList.remove('hidden');
+                document.getElementById('edit-audio-filename').textContent = file.name;
+            };
+            r.readAsDataURL(file);
+        }
+
+        function handleEditAudioUpload(e) {
+            const file = e.target.files[0];
+            if (file) processEditAudioFile(file);
+        }
+
+        function clearEditAudio(e) {
+            if (e) e.stopPropagation();
+            state.editAudio = null;
+            document.getElementById('edit-file-audio').value = '';
+            document.getElementById('edit-audio-prompt').classList.remove('hidden');
+            document.getElementById('edit-audio-preview-container').classList.add('hidden');
+            document.getElementById('edit-audio-filename').textContent = '未選擇檔案';
+        }
+
+        function processEditImageFile(file) {
+            const r = new FileReader();
+            r.onload = (ev) => {
+                state.editImage = ev.target.result;
+                document.getElementById('edit-image-element').src = state.editImage;
+                document.getElementById('edit-image-prompt').classList.add('hidden');
+                document.getElementById('edit-image-preview-container').classList.remove('hidden');
+                document.getElementById('edit-image-filename').textContent = file.name;
+            };
+            r.readAsDataURL(file);
+        }
+
+        function handleEditImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) processEditImageFile(file);
+        }
+
+        function clearEditImage(e) {
+            if (e) e.stopPropagation();
+            state.editImage = null;
+            document.getElementById('edit-file-image').value = '';
+            document.getElementById('edit-image-prompt').classList.remove('hidden');
+            document.getElementById('edit-image-preview-container').classList.add('hidden');
+            document.getElementById('edit-image-filename').textContent = '未選擇檔案';
+        }
+
         function clearForm() {
             document.getElementById('vocab-form').reset();
+            document.getElementById('verb-type-container').classList.add('hidden');
             clearAudio();
             clearImage();
         }
@@ -808,6 +1086,8 @@
 
             const word = document.getElementById('input-word').value.trim();
             const reading = document.getElementById('input-reading').value.trim();
+            const pos = document.getElementById('input-pos').value;
+            const verbType = pos === '動詞' ? document.getElementById('input-verb-type').value : '';
             const definition = document.getElementById('input-definition').value.trim();
             const sentence = document.getElementById('input-sentence').value.trim();
 
@@ -815,6 +1095,8 @@
                 id: 'vocab_' + Date.now(),
                 word,
                 reading,
+                pos,
+                verbType,
                 definition,
                 sentence,
                 audio: state.currentAudio,
@@ -873,6 +1155,7 @@
                 if (query) {
                     return v.word.toLowerCase().includes(query) ||
                            (v.reading || '').toLowerCase().includes(query) ||
+                           (v.pos || '').toLowerCase().includes(query) ||
                            v.definition.toLowerCase().includes(query) ||
                            v.sentence.toLowerCase().includes(query);
                 }
@@ -894,13 +1177,25 @@
                 <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col justify-between space-y-4">
                     <div>
                         <div class="flex items-start justify-between">
-                            <ruby class="text-3xl font-black text-slate-800 dark:text-slate-100 font-jp">
-                                ${v.word}
-                                ${v.reading ? `<rt class="text-xs text-sakura-500 font-normal">${v.reading}</rt>` : ''}
-                            </ruby>
-                            <button onclick="deleteEntry('${v.id}')" class="text-slate-300 hover:text-rose-500 p-1 transition-colors" title="刪除">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
+                            <div>
+                                <ruby class="text-3xl font-black text-slate-800 dark:text-slate-100 font-jp">
+                                    ${v.word}
+                                    ${v.reading ? `<rt class="text-xs text-sakura-500 font-normal">${v.reading}</rt>` : ''}
+                                </ruby>
+                                ${v.pos ? `
+                                    <div class="mt-1 flex items-center gap-1.5">
+                                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-sakura-50 dark:bg-sakura-900/40 text-sakura-600 dark:text-sakura-400 border border-sakura-100 dark:border-sakura-800">${v.pos}</span>${v.verbType ? `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${v.verbType}</span>` : ''}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button onclick="openEditModal('${v.id}')" class="text-slate-300 hover:text-sakura-500 p-1 transition-colors" title="編輯">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteEntry('${v.id}')" class="text-slate-300 hover:text-rose-500 p-1 transition-colors" title="刪除">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <p class="text-sm font-bold text-slate-700 dark:text-slate-200 mt-2">${v.definition}</p>
@@ -929,6 +1224,80 @@
             `).join('');
 
             lucide.createIcons();
+        }
+
+        /* EDIT MODAL FUNCTIONS */
+        function openEditModal(id) {
+            const v = state.vocabs.find(x => x.id === id);
+            if (!v) return;
+
+            document.getElementById('edit-id').value = v.id;
+            document.getElementById('edit-word').value = v.word;
+            document.getElementById('edit-reading').value = v.reading || '';
+            document.getElementById('edit-pos').value = v.pos || '';
+            document.getElementById('edit-verb-type').value = v.verbType || '';
+            document.getElementById('edit-definition').value = v.definition;
+            document.getElementById('edit-sentence').value = v.sentence;
+
+            toggleVerbTypeVisibility('edit-pos', 'edit-verb-type-container');
+
+            // 載入與初始化現有音訊
+            if (v.audio) {
+                state.editAudio = v.audio;
+                document.getElementById('edit-audio-element').src = v.audio;
+                document.getElementById('edit-audio-prompt').classList.add('hidden');
+                document.getElementById('edit-audio-preview-container').classList.remove('hidden');
+                document.getElementById('edit-audio-filename').textContent = '已保存音訊';
+            } else {
+                clearEditAudio();
+            }
+
+            // 載入與初始化現有圖片
+            if (v.image) {
+                state.editImage = v.image;
+                document.getElementById('edit-image-element').src = v.image;
+                document.getElementById('edit-image-prompt').classList.add('hidden');
+                document.getElementById('edit-image-preview-container').classList.remove('hidden');
+                document.getElementById('edit-image-filename').textContent = '已保存截圖';
+            } else {
+                clearEditImage();
+            }
+
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        async function handleEditSubmit(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('edit-id').value;
+            const target = state.vocabs.find(x => x.id === id);
+            if (!target) return;
+
+            const pos = document.getElementById('edit-pos').value;
+            const verbType = pos === '動詞' ? document.getElementById('edit-verb-type').value : '';
+
+            const updatedEntry = {
+                ...target,
+                word: document.getElementById('edit-word').value.trim(),
+                reading: document.getElementById('edit-reading').value.trim(),
+                pos,
+                verbType,
+                definition: document.getElementById('edit-definition').value.trim(),
+                sentence: document.getElementById('edit-sentence').value.trim(),
+                audio: state.editAudio,
+                image: state.editImage,
+            };
+
+            await dbSaveVocab(updatedEntry);
+            await loadVocabs();
+            closeEditModal();
+
+            // 自動背景同步
+            autoUploadToDriveAppData();
         }
 
         async function deleteEntry(id) {
