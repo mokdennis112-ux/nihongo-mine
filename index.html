@@ -102,6 +102,13 @@
                         <i data-lucide="cloud-upload" class="w-4 h-4"></i>
                         <span id="sync-btn-text" class="hidden sm:inline">Google Drive 同步</span>
                     </button>
+                    
+                    <!-- 登出按鈕 -->
+                    <button id="logout-btn" onclick="logoutGoogleAccount()" class="hidden px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/50 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold flex items-center gap-1 transition-colors">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">登出</span>
+                    </button>
+
                     <button onclick="openBackupModal()" class="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 transition-colors">
                         <i data-lucide="hard-drive" class="w-4 h-4 text-sakura-500"></i>
                         <span class="hidden sm:inline">備份/匯入</span>
@@ -432,9 +439,21 @@
 
         function updateSyncBtnUI(isSynced) {
             const btnText = document.getElementById('sync-btn-text');
+            const logoutBtn = document.getElementById('logout-btn');
             if (btnText) {
                 btnText.textContent = isSynced ? '已連線 Google Drive' : 'Google Drive 同步';
             }
+            if (logoutBtn) {
+                if (isSynced) logoutBtn.classList.remove('hidden');
+                else logoutBtn.classList.add('hidden');
+            }
+        }
+
+        function logoutGoogleAccount() {
+            localStorage.removeItem('gdrive_token');
+            if (gapi.client) gapi.client.setToken(null);
+            updateSyncBtnUI(false);
+            alert('已成功登出 Google 帳號！');
         }
 
         async function syncToGoogleDrive() {
@@ -560,6 +579,8 @@
 
                 const remoteData = res.result;
                 if (Array.isArray(remoteData)) {
+                    // 清空本地資料庫以完全對齊雲端（包含解決刪除卡片跨裝置同步問題）
+                    await dbClearAll();
                     for (let item of remoteData) {
                         await dbSaveVocab(item);
                     }
@@ -627,6 +648,16 @@
                 store.delete(id);
                 tx.oncomplete = () => resolve();
                 tx.onerror = (e) => reject(e);
+            });
+        }
+
+        function dbClearAll() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('vocabs', 'readwrite');
+                const store = tx.objectStore('vocabs');
+                const req = store.clear();
+                req.onsuccess = () => resolve();
+                req.onerror = (e) => reject(e);
             });
         }
 
