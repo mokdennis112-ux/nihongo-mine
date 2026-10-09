@@ -57,7 +57,6 @@
         .perspective-1000 { perspective: 1000px; }
         .transform-style-3d { transform-style: preserve-3d; }
         .backface-hidden { backface-visibility: hidden; }
-        .rotate-y-180 { transform: rotateY(180deg); }
 
         .sakura-pattern {
             background-image: radial-gradient(circle at 100% 150%, transparent 20%, rgba(232, 62, 107, 0.03) 21%, rgba(232, 62, 107, 0.03) 34%, transparent 35%, transparent),
@@ -207,7 +206,6 @@
                         <input type="text" id="input-definition" required placeholder="例：樹葉縫隙間透出的日光" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
                     </div>
 
-                    <!-- 拆分日文例句與中文翻譯 -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
@@ -286,14 +284,28 @@
         <!-- GALLERY TAB -->
         <div id="view-gallery" class="tab-view hidden space-y-6">
             <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200/80 dark:border-slate-700/80 space-y-4">
-                <div class="flex flex-col sm:flex-row items-center gap-3">
-                    <div class="relative w-full">
+                <div class="flex flex-col lg:flex-row items-center gap-3">
+                    <div class="relative w-full lg:w-1/3">
                         <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5"></i>
-                        <input type="text" id="search-input" oninput="renderGallery()" placeholder="搜尋日文單詞、讀音、中文釋義或例句..." class="w-full pl-12 pr-10 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50">
+                        <input type="text" id="search-input" oninput="renderGallery()" placeholder="搜尋單詞、釋義或例句..." class="w-full pl-12 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50">
                     </div>
 
-                    <!-- 模式與篩選控制區 -->
-                    <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-start">
+                    <!-- 建立日期篩選與詞性篩選 -->
+                    <div class="flex flex-wrap items-center gap-2 w-full lg:w-2/3 justify-between lg:justify-end">
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+                            <input type="date" id="filter-date" onchange="renderGallery()" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
+                            <button onclick="document.getElementById('filter-date').value=''; renderGallery();" class="text-[11px] text-slate-400 hover:text-rose-500 font-semibold">清除日曆</button>
+                        </div>
+
+                        <select id="filter-pos" onchange="renderGallery()" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
+                            <option value="">所有詞性</option>
+                            <option value="名詞">名詞</option>
+                            <option value="動詞">動詞</option>
+                            <option value="形容詞">形容詞 (い形)</option>
+                            <option value="形容動詞">形容動詞 (な形)</option>
+                        </select>
+
                         <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-700">
                             <button id="view-mode-grid" onclick="setGalleryViewMode('grid')" class="p-2 rounded-xl text-sakura-600 bg-white dark:bg-slate-800 shadow-sm transition-all" title="網格檢視">
                                 <i data-lucide="grid" class="w-4 h-4"></i>
@@ -303,11 +315,11 @@
                             </button>
                         </div>
 
-                        <div class="flex items-center gap-1.5 overflow-x-auto py-1">
-                            <button id="filter-audio-btn" onclick="toggleMediaFilter('audio')" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 shrink-0 hover:bg-slate-100 dark:hover:bg-slate-700">
+                        <div class="flex items-center gap-1.5">
+                            <button id="filter-audio-btn" onclick="toggleMediaFilter('audio')" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 hover:bg-slate-100 dark:hover:bg-slate-700">
                                 <i data-lucide="music" class="w-3.5 h-3.5 text-sakura-500"></i> 有音訊
                             </button>
-                            <button id="filter-image-btn" onclick="toggleMediaFilter('image')" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 shrink-0 hover:bg-slate-100 dark:hover:bg-slate-700">
+                            <button id="filter-image-btn" onclick="toggleMediaFilter('image')" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 hover:bg-slate-100 dark:hover:bg-slate-700">
                                 <i data-lucide="image" class="w-3.5 h-3.5 text-rose-500"></i> 有截圖
                             </button>
                         </div>
@@ -336,17 +348,23 @@
                         <i data-lucide="layers" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">Flashcards 雙面溫習</h3>
+                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">Flashcards 溫習</h3>
                         <p id="fc-status" class="text-xs text-slate-400">進度: 0 / 0</p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                    <!-- 卡片模式選擇 -->
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                    <!-- 溫習頁面日期篩選 -->
+                    <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <input type="date" id="fc-filter-date" onchange="setupFlashcards()" class="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
+                        <button onclick="document.getElementById('fc-filter-date').value=''; setupFlashcards();" class="text-[10px] text-slate-400 hover:text-rose-500">重置</button>
+                    </div>
+
                     <select id="fc-mode-select" onchange="changeFcMode()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200">
                         <option value="standard">標準模式 (日語在正面)</option>
-                        <option value="chinese_front">中文模式 (僅中文釋義在正面)</option>
-                        <option value="audio_only">聽力模式 (僅語音在正面)</option>
+                        <option value="chinese_front">中文模式 (三頁：釋義 -> 手寫板 -> 背面全資料)</option>
+                        <option value="audio_only">聽力模式 (聲音在正面 -> 背面全資料)</option>
                     </select>
 
                     <button onclick="shuffleDeck()" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition-colors flex items-center gap-1 shrink-0">
@@ -360,35 +378,22 @@
             </div>
 
             <div class="perspective-1000 min-h-[380px]">
-                <div id="flashcard-3d" onclick="flipFlashcard()" class="transform-style-3d relative w-full h-96 sm:h-[420px] rounded-3xl cursor-pointer transition-transform duration-500 shadow-xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-800">
+                <div id="flashcard-3d" class="relative w-full h-96 sm:h-[420px] rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-800">
                     
-                    <!-- 正面 -->
-                    <div class="backface-hidden absolute inset-0 p-6 sm:p-8 flex flex-col justify-between items-center text-center">
+                    <!-- 卡片內容展現區 -->
+                    <div id="fc-card-body" onclick="flipFlashcard()" class="w-full h-full p-6 sm:p-8 flex flex-col justify-between items-center text-center cursor-pointer">
                         <div class="w-full flex justify-between items-center text-xs font-semibold text-slate-400">
-                            <span id="fc-front-label">正面：日文單詞</span>
-                            <button id="fc-front-audio-btn" onclick="event.stopPropagation(); playCurrentCardAudio()" class="p-2 rounded-xl bg-sakura-50 text-sakura-600 hover:bg-sakura-100 transition-colors">
+                            <span id="fc-card-label">正面</span>
+                            <button id="fc-card-audio-btn" onclick="event.stopPropagation(); playCurrentCardAudio()" class="p-2 rounded-xl bg-sakura-50 text-sakura-600 hover:bg-sakura-100 transition-colors">
                                 <i data-lucide="volume-2" class="w-5 h-5"></i>
                             </button>
                         </div>
 
-                        <div id="fc-front-content" class="my-auto space-y-4 w-full"></div>
+                        <div id="fc-card-content" class="my-auto space-y-4 w-full"></div>
 
                         <p class="text-xs text-slate-400 flex items-center gap-1">
-                            <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> 點擊卡片翻面
+                            <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> <span id="fc-click-hint">點擊卡片切換頁面</span>
                         </p>
-                    </div>
-
-                    <!-- 背面 -->
-                    <div class="backface-hidden rotate-y-180 absolute inset-0 p-6 sm:p-8 flex flex-col justify-between items-center text-center bg-gradient-to-b from-slate-50 to-white dark:from-slate-800/90 dark:to-slate-800 rounded-3xl overflow-y-auto">
-                        <div class="w-full text-xs font-semibold text-slate-400 text-right">
-                            背面：詳細內容
-                        </div>
-
-                        <div id="fc-back-content" class="my-auto space-y-4 w-full py-2"></div>
-
-                        <div class="w-full text-xs text-slate-400">
-                            快捷鍵：按 [Space] 翻頁，[← / →] 切換卡片
-                        </div>
                     </div>
 
                 </div>
@@ -775,7 +780,7 @@
         }
 
         /* ==========================================================================
-           ROBUST TTS & MOBILE SAFARI SOUND ENGINE
+           iOS SAFARI COMPATIBLE TTS ENGINE
            ========================================================================== */
         let availableVoices = [];
 
@@ -791,7 +796,6 @@
         function speakJapanese(text) {
             if (!('speechSynthesis' in window) || !text) return;
 
-            // 流動裝置（iOS / Safari）音訊解鎖與快取清理機制
             window.speechSynthesis.cancel();
 
             try {
@@ -802,15 +806,18 @@
                 }
             } catch (e) {}
 
+            const prime = new SpeechSynthesisUtterance('');
+            prime.volume = 0;
+            window.speechSynthesis.speak(prime);
+
             const u = new SpeechSynthesisUtterance(text);
             u.lang = 'ja-JP';
-            u.rate = 0.9; // 稍微減速以獲得優良發音品質
+            u.rate = 0.9;
 
             if (availableVoices.length === 0) {
                 availableVoices = window.speechSynthesis.getVoices();
             }
 
-            // 優先挑選優質日語聲音引擎 (Apple / Google Native Voices)
             const jaVoice = availableVoices.find(v => v.lang.includes('ja') && (v.name.includes('Kyoko') || v.name.includes('Otoya') || v.name.includes('Google') || v.name.includes('Natural'))) 
                          || availableVoices.find(v => v.lang.includes('ja'));
 
@@ -901,15 +908,15 @@
         let state = {
             vocabs: [],
             currentTab: 'add',
-            galleryViewMode: 'grid', // 'grid' | 'list'
+            galleryViewMode: 'grid',
             mediaFilters: { audio: false, image: false },
             currentAudio: null,
             currentImage: null,
             editAudio: null,
             editImage: null,
             fcIndex: 0,
-            fcFlipped: false,
-            fcMode: 'standard', // 'standard' | 'chinese_front' | 'audio_only'
+            fcPageStep: 1, // 用於中文模式 1: 正面, 2: 手寫板, 3: 背面全資料
+            fcMode: 'standard',
             fcDeck: []
         };
 
@@ -966,7 +973,6 @@
                 }
             });
 
-            // 新增採集拖放
             const audioZone = document.getElementById('drop-zone-audio');
             audioZone.addEventListener('dragover', (e) => { e.preventDefault(); audioZone.classList.add('border-sakura-500'); });
             audioZone.addEventListener('dragleave', () => audioZone.classList.remove('border-sakura-500'));
@@ -987,7 +993,6 @@
                 if (files.length && files[0].type.startsWith('image/')) processImageFile(files[0]);
             });
 
-            // 編輯 modal 拖放
             const editAudioZone = document.getElementById('edit-drop-zone-audio');
             editAudioZone.addEventListener('dragover', (e) => { e.preventDefault(); editAudioZone.classList.add('border-sakura-500'); });
             editAudioZone.addEventListener('dragleave', () => editAudioZone.classList.remove('border-sakura-500'));
@@ -1199,10 +1204,17 @@
 
         function renderGallery() {
             const query = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+            const filterDate = document.getElementById('filter-date')?.value;
+            const filterPos = document.getElementById('filter-pos')?.value;
 
             let filtered = state.vocabs.filter(v => {
                 if (state.mediaFilters.audio && !v.audio) return false;
                 if (state.mediaFilters.image && !v.image) return false;
+                if (filterPos && v.pos !== filterPos) return false;
+                if (filterDate) {
+                    const itemDate = new Date(v.createdAt).toISOString().slice(0, 10);
+                    if (itemDate !== filterDate) return false;
+                }
                 if (query) {
                     return v.word.toLowerCase().includes(query) ||
                            (v.reading || '').toLowerCase().includes(query) ||
@@ -1275,9 +1287,7 @@
                                 ` : ''}
 
                                 ${v.image ? `
-                                    <button onclick="openImageModal('${v.image}')" class="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-bold flex items-center gap-1 transition-colors">
-                                        <i data-lucide="image" class="w-3.5 h-3.5"></i> 截圖
-                                    </button>
+                                    <img src="${v.image}" onclick="openImageModal('${v.image}')" class="w-8 h-8 rounded-lg object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform" title="點擊放大圖片">
                                 ` : ''}
                             </div>
                             <span class="text-[10px] text-slate-400">${new Date(v.createdAt).toLocaleDateString()}</span>
@@ -1285,7 +1295,6 @@
                     </div>
                 `).join('');
             } else {
-                // 列表清單檢視模式 (List View)
                 container.className = "space-y-3";
                 container.innerHTML = filtered.map(v => `
                     <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1297,7 +1306,7 @@
                                 <div class="flex items-center gap-2">
                                     <span class="text-lg font-black text-slate-800 dark:text-slate-100 font-jp">${v.word}</span>
                                     ${v.reading ? `<span class="text-xs text-sakura-500 font-jp">(${v.reading})</span>` : ''}
-                                    ${v.pos ? `<span class="px-2 py-0.5 text-[9px] font-bold rounded bg-sakura-50 text-sakura-600 dark:bg-sakura-900/40 dark:text-sakura-400">${v.pos}</span>` : ''}
+                                    ${v.pos ? `<span class="px-2 py-0.5 text-[9px] font-bold rounded bg-sakura-50 text-sakura-600 dark:bg-sakura-900/40 dark:text-sakura-400">[${v.pos}${v.verbType ? ` · ${v.verbType}` : ''}]</span>` : ''}
                                 </div>
                                 <p class="text-xs font-bold text-slate-600 dark:text-slate-300">${v.definition}</p>
                                 ${v.sentence ? `<p class="text-[11px] text-slate-400 font-jp mt-0.5 line-clamp-1">「${v.sentence}」 ${v.sentenceTr ? `- ${v.sentenceTr}` : ''}</p>` : ''}
@@ -1311,9 +1320,7 @@
                                 </button>
                             ` : ''}
                             ${v.image ? `
-                                <button onclick="openImageModal('${v.image}')" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-rose-500 hover:bg-slate-200" title="檢視圖片">
-                                    <i data-lucide="image" class="w-4 h-4"></i>
-                                </button>
+                                <img src="${v.image}" onclick="openImageModal('${v.image}')" class="w-8 h-8 rounded-lg object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform" title="點擊放大圖片">
                             ` : ''}
                             <button onclick="openEditModal('${v.id}')" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-sakura-500">
                                 <i data-lucide="edit-3" class="w-4 h-4"></i>
@@ -1426,104 +1433,217 @@
             document.getElementById('image-modal').classList.add('hidden');
         }
 
-        /* FLASHCARDS LOGIC */
+        /* ==========================================================================
+           FLASHCARDS & HANDWRITING CANVAS LOGIC
+           ========================================================================== */
+        let canvasDrawing = false;
+        let canvasCtx = null;
+
         function changeFcMode() {
             state.fcMode = document.getElementById('fc-mode-select').value;
+            state.fcPageStep = 1;
             updateFlashcard();
         }
 
         function setupFlashcards() {
-            state.fcDeck = [...state.vocabs];
+            const fcDate = document.getElementById('fc-filter-date')?.value;
+            if (fcDate) {
+                state.fcDeck = state.vocabs.filter(v => new Date(v.createdAt).toISOString().slice(0, 10) === fcDate);
+            } else {
+                state.fcDeck = [...state.vocabs];
+            }
             state.fcIndex = 0;
-            state.fcFlipped = false;
+            state.fcPageStep = 1;
             updateFlashcard();
         }
 
         function shuffleDeck() {
             state.fcDeck.sort(() => Math.random() - 0.5);
             state.fcIndex = 0;
+            state.fcPageStep = 1;
             updateFlashcard();
         }
 
         function flipFlashcard() {
-            state.fcFlipped = !state.fcFlipped;
-            const el = document.getElementById('flashcard-3d');
-            if (state.fcFlipped) el.classList.add('rotate-y-180');
-            else el.classList.remove('rotate-y-180');
+            if (state.fcMode === 'chinese_front') {
+                // 中文模式： 1 (正面釋義) -> 2 (手寫畫板) -> 3 (背面全資料) -> 1
+                state.fcPageStep = (state.fcPageStep % 3) + 1;
+            } else {
+                // 標準模式 & 聽力模式： 1 (正面) <-> 2 (背面)
+                state.fcPageStep = state.fcPageStep === 1 ? 2 : 1;
+            }
+            updateFlashcard();
+        }
+
+        function initCanvas() {
+            const canvas = document.getElementById('hw-canvas');
+            if (!canvas) return;
+
+            canvasCtx = canvas.getContext('2d');
+            canvasCtx.strokeStyle = '#e83e6b';
+            canvasCtx.lineWidth = 4;
+            canvasCtx.lineCap = 'round';
+
+            const startDraw = (e) => {
+                canvasDrawing = true;
+                canvasCtx.beginPath();
+                const pos = getCanvasPos(e, canvas);
+                canvasCtx.moveTo(pos.x, pos.y);
+            };
+
+            const draw = (e) => {
+                if (!canvasDrawing) return;
+                const pos = getCanvasPos(e, canvas);
+                canvasCtx.lineTo(pos.x, pos.y);
+                canvasCtx.stroke();
+            };
+
+            const stopDraw = () => { canvasDrawing = false; };
+
+            canvas.onmousedown = startDraw;
+            canvas.onmousemove = draw;
+            canvas.onmouseup = stopDraw;
+
+            canvas.ontouchstart = (e) => { e.preventDefault(); startDraw(e.touches[0]); };
+            canvas.ontouchmove = (e) => { e.preventDefault(); draw(e.touches[0]); };
+            canvas.ontouchend = stopDraw;
+        }
+
+        function getCanvasPos(evt, canvas) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: evt.clientX - rect.left,
+                y: evt.clientY - rect.top
+            };
+        }
+
+        function clearCanvas(e) {
+            if (e) e.stopPropagation();
+            const canvas = document.getElementById('hw-canvas');
+            if (canvas && canvasCtx) {
+                canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function renderFullBackContent(cur) {
+            return `
+                <div class="space-y-3 w-full max-w-md mx-auto text-center">
+                    <ruby class="text-4xl font-black text-slate-800 dark:text-slate-100 font-jp">
+                        ${cur.word} <rt class="text-sm text-sakura-500 font-medium">${cur.reading || ''}</rt>
+                    </ruby>
+                    
+                    ${cur.pos ? `
+                        <div>
+                            <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-sakura-50 text-sakura-600 border border-sakura-100 dark:bg-sakura-900/40 dark:text-sakura-400">
+                                ${cur.pos}${cur.verbType ? ` (${cur.verbType})` : ''}
+                            </span>
+                        </div>
+                    ` : ''}
+
+                    <h3 class="text-2xl font-extrabold text-slate-800 dark:text-slate-100 mt-1">${cur.definition}</h3>
+
+                    <!-- 音訊按鈕組合 -->
+                    <div class="flex items-center justify-center gap-2 pt-1">
+                        <button onclick="event.stopPropagation(); speakJapanese('${cur.word}')" class="px-4 py-2 rounded-xl bg-sakura-50 text-sakura-600 hover:bg-sakura-100 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm">
+                            <i data-lucide="volume-2" class="w-4 h-4"></i> 單詞 TTS
+                        </button>
+                        ${cur.audio ? `
+                            <button onclick="event.stopPropagation(); playVocabAudio('${cur.id}')" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors">
+                                <i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 例句音訊
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    ${cur.sentence ? `
+                        <div class="mt-3 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50 space-y-1">
+                            <p class="text-xs text-slate-700 dark:text-slate-300 font-jp">「${cur.sentence}」</p>
+                            ${cur.sentenceTr ? `<p class="text-[11px] text-slate-400">${cur.sentenceTr}</p>` : ''}
+                        </div>
+                    ` : ''}
+
+                    ${cur.image ? `<img src="${cur.image}" onclick="event.stopPropagation(); openImageModal('${cur.image}')" class="max-h-28 rounded-xl border border-slate-200 dark:border-slate-700 mx-auto shadow-md object-cover cursor-pointer hover:scale-105 transition-transform mt-2">` : ''}
+                </div>
+            `;
         }
 
         function updateFlashcard() {
-            const el = document.getElementById('flashcard-3d');
-            el.classList.remove('rotate-y-180');
-            state.fcFlipped = false;
-
-            const frontContainer = document.getElementById('fc-front-content');
-            const backContainer = document.getElementById('fc-back-content');
-            const frontLabel = document.getElementById('fc-front-label');
+            const cardBody = document.getElementById('fc-card-content');
+            const cardLabel = document.getElementById('fc-card-label');
+            const audioBtn = document.getElementById('fc-card-audio-btn');
+            const clickHint = document.getElementById('fc-click-hint');
 
             if (state.fcDeck.length === 0) {
                 document.getElementById('fc-status').textContent = `進度: 0 / 0`;
-                frontContainer.innerHTML = `<h3 class="text-2xl font-bold text-slate-400">目前未有生字卡片</h3>`;
-                backContainer.innerHTML = `<p class="text-sm text-slate-400">請先建立單詞！</p>`;
+                cardBody.innerHTML = `<h3 class="text-2xl font-bold text-slate-400">目前未有選取的卡片</h3>`;
+                audioBtn.classList.add('hidden');
                 return;
             }
 
             const cur = state.fcDeck[state.fcIndex];
             document.getElementById('fc-status').textContent = `進度: ${state.fcIndex + 1} / ${state.fcDeck.length}`;
             document.getElementById('fc-progress').style.width = `${((state.fcIndex + 1) / state.fcDeck.length) * 100}%`;
+            audioBtn.classList.remove('hidden');
 
             if (state.fcMode === 'standard') {
-                frontLabel.textContent = "正面：日文單詞與例句";
-                frontContainer.innerHTML = `
-                    <ruby class="text-4xl sm:text-5xl font-black text-slate-800 dark:text-slate-100 font-jp tracking-wide">
-                        ${cur.word} <rt class="text-base text-sakura-500 font-medium">${cur.reading || ''}</rt>
-                    </ruby>
-                    ${cur.sentence ? `<p class="text-sm font-jp text-slate-500 dark:text-slate-400 italic max-w-md mx-auto line-clamp-3 mt-4">「${cur.sentence}」</p>` : ''}
-                `;
-                backContainer.innerHTML = `
-                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-slate-100">${cur.definition}</h3>
-                    ${cur.sentenceTr ? `<p class="text-xs text-slate-500 italic mt-1">「${cur.sentenceTr}」</p>` : ''}
-                    ${cur.image ? `<img src="${cur.image}" class="max-h-36 rounded-xl border border-slate-200 dark:border-slate-700 mx-auto shadow-md object-cover mt-4">` : ''}
-                `;
+                if (state.fcPageStep === 1) {
+                    cardLabel.textContent = "正面：日文單詞與例句";
+                    clickHint.textContent = "點擊卡片翻看背面釋義";
+                    cardBody.innerHTML = `
+                        <ruby class="text-4xl sm:text-5xl font-black text-slate-800 dark:text-slate-100 font-jp tracking-wide">
+                            ${cur.word} <rt class="text-base text-sakura-500 font-medium">${cur.reading || ''}</rt>
+                        </ruby>
+                        ${cur.sentence ? `<p class="text-sm font-jp text-slate-500 dark:text-slate-400 italic max-w-md mx-auto line-clamp-3 mt-4">「${cur.sentence}」</p>` : ''}
+                    `;
+                } else {
+                    cardLabel.textContent = "背面：釋義與詳細資訊";
+                    clickHint.textContent = "點擊卡片返回正面";
+                    cardBody.innerHTML = renderFullBackContent(cur);
+                }
             } else if (state.fcMode === 'chinese_front') {
-                // 正面只有中文釋義
-                frontLabel.textContent = "正面：中文釋義";
-                frontContainer.innerHTML = `
-                    <h3 class="text-3xl sm:text-4xl font-extrabold text-slate-800 dark:text-slate-100">${cur.definition}</h3>
-                    ${cur.sentenceTr ? `<p class="text-sm text-slate-400 italic mt-2 max-w-md mx-auto">「${cur.sentenceTr}」</p>` : ''}
-                `;
-                backContainer.innerHTML = `
-                    <ruby class="text-3xl sm:text-4xl font-black text-slate-800 dark:text-slate-100 font-jp">
-                        ${cur.word} <rt class="text-sm text-sakura-500 font-medium">${cur.reading || ''}</rt>
-                    </ruby>
-                    ${cur.pos ? `<div class="mt-1"><span class="px-2 py-0.5 text-[10px] font-bold rounded bg-sakura-50 text-sakura-600">${cur.pos}</span></div>` : ''}
-                    ${cur.sentence ? `<p class="text-xs font-jp text-slate-500 italic mt-3">「${cur.sentence}」</p>` : ''}
-                    ${cur.image ? `<img src="${cur.image}" class="max-h-32 rounded-xl border border-slate-200 dark:border-slate-700 mx-auto shadow-md object-cover mt-3">` : ''}
-                `;
-            } else if (state.fcMode === 'audio_only') {
-                // 正面只有聽力語音
-                frontLabel.textContent = "正面：聽力訓練 (點擊播放聲音)";
-                frontContainer.innerHTML = `
-                    <div class="space-y-4">
-                        <button onclick="event.stopPropagation(); speakJapanese('${cur.word}')" class="px-6 py-3 rounded-2xl bg-sakura-500 hover:bg-sakura-600 text-white font-bold text-sm shadow-lg flex items-center gap-2 mx-auto">
-                            <i data-lucide="volume-2" class="w-5 h-5"></i> 播放日文單詞 TTS
-                        </button>
-                        ${cur.audio ? `
-                            <button onclick="event.stopPropagation(); playVocabAudio('${cur.id}')" class="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 font-bold text-xs flex items-center gap-2 mx-auto">
-                                <i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 播放原句聲音
+                if (state.fcPageStep === 1) {
+                    cardLabel.textContent = "第一頁：中文釋義 (請試著默寫單詞)";
+                    clickHint.textContent = "點擊進入【第二頁：手寫練習板】";
+                    cardBody.innerHTML = `
+                        <h3 class="text-3xl sm:text-4xl font-extrabold text-slate-800 dark:text-slate-100">${cur.definition}</h3>
+                    `;
+                } else if (state.fcPageStep === 2) {
+                    cardLabel.textContent = "第二頁：手寫畫板 (觸控或滑鼠書寫)";
+                    clickHint.textContent = "點擊進入【第三頁：對答案與詳細資訊】";
+                    cardBody.innerHTML = `
+                        <div class="space-y-2 w-full" onclick="event.stopPropagation()">
+                            <canvas id="hw-canvas" width="300" height="180" class="border-2 border-dashed border-sakura-300 dark:border-slate-600 rounded-2xl bg-slate-50 dark:bg-slate-900 mx-auto touch-none cursor-crosshair"></canvas>
+                            <button onclick="clearCanvas(event)" class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 text-xs text-rose-500 font-bold hover:bg-slate-200">
+                                清除畫板
                             </button>
-                        ` : ''}
-                    </div>
-                `;
-                backContainer.innerHTML = `
-                    <ruby class="text-3xl sm:text-4xl font-black text-slate-800 dark:text-slate-100 font-jp">
-                        ${cur.word} <rt class="text-sm text-sakura-500 font-medium">${cur.reading || ''}</rt>
-                    </ruby>
-                    <h4 class="text-xl font-bold text-slate-700 dark:text-slate-200 mt-2">${cur.definition}</h4>
-                    ${cur.sentence ? `<p class="text-xs font-jp text-slate-500 italic mt-2">「${cur.sentence}」</p>` : ''}
-                    ${cur.sentenceTr ? `<p class="text-[11px] text-slate-400">${cur.sentenceTr}</p>` : ''}
-                    ${cur.image ? `<img src="${cur.image}" class="max-h-32 rounded-xl border border-slate-200 dark:border-slate-700 mx-auto shadow-md object-cover mt-3">` : ''}
-                `;
+                        </div>
+                    `;
+                    setTimeout(initCanvas, 50);
+                } else {
+                    cardLabel.textContent = "第三頁：完整解答與欄位資訊";
+                    clickHint.textContent = "點擊重頭開始 (返回第一頁)";
+                    cardBody.innerHTML = renderFullBackContent(cur);
+                }
+            } else if (state.fcMode === 'audio_only') {
+                if (state.fcPageStep === 1) {
+                    cardLabel.textContent = "正面：聽力訓練";
+                    clickHint.textContent = "點擊卡片翻看背面解答";
+                    cardBody.innerHTML = `
+                        <div class="space-y-4">
+                            <button onclick="event.stopPropagation(); speakJapanese('${cur.word}')" class="px-6 py-3 rounded-2xl bg-sakura-500 hover:bg-sakura-600 text-white font-bold text-sm shadow-lg flex items-center gap-2 mx-auto">
+                                <i data-lucide="volume-2" class="w-5 h-5"></i> 播放日文單詞 TTS
+                            </button>
+                            ${cur.audio ? `
+                                <button onclick="event.stopPropagation(); playVocabAudio('${cur.id}')" class="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 font-bold text-xs flex items-center gap-2 mx-auto">
+                                    <i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 播放例句聲音
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                } else {
+                    cardLabel.textContent = "背面：完整解答與欄位資訊";
+                    clickHint.textContent = "點擊卡片返回正面";
+                    cardBody.innerHTML = renderFullBackContent(cur);
+                }
             }
 
             lucide.createIcons();
@@ -1539,12 +1659,14 @@
         function nextFlashcard() {
             if (state.fcIndex < state.fcDeck.length - 1) state.fcIndex++;
             else state.fcIndex = 0;
+            state.fcPageStep = 1;
             updateFlashcard();
         }
 
         function prevFlashcard() {
             if (state.fcIndex > 0) state.fcIndex--;
             else state.fcIndex = state.fcDeck.length - 1;
+            state.fcPageStep = 1;
             updateFlashcard();
         }
 
