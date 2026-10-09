@@ -443,6 +443,23 @@
                 return;
             }
 
+            const savedToken = localStorage.getItem('gdrive_token');
+
+            if (savedToken) {
+                gapi.client.setToken({ access_token: savedToken });
+                updateSyncBtnUI(true);
+                
+                try {
+                    await downloadAndMergeFromDriveAppData(false);
+                    await uploadToDriveAppData(false);
+                    return;
+                } catch (err) {
+                    console.warn('Token 已失效，重新請求授權...', err);
+                    localStorage.removeItem('gdrive_token');
+                    updateSyncBtnUI(false);
+                }
+            }
+
             tokenClient.callback = async (resp) => {
                 if (resp.error) {
                     alert('Google 授權失敗！');
@@ -457,11 +474,7 @@
                 await uploadToDriveAppData(false);
             };
 
-            if (gapi.client.getToken() === null) {
-                tokenClient.requestAccessToken({ prompt: 'consent' });
-            } else {
-                tokenClient.requestAccessToken({ prompt: '' });
-            }
+            tokenClient.requestAccessToken({ prompt: '' });
         }
 
         async function autoUploadToDriveAppData() {
@@ -524,6 +537,7 @@
                 }
             } catch (err) {
                 console.error('Upload to Drive error:', err);
+                throw err;
             }
         }
 
@@ -558,6 +572,7 @@
                 } else {
                     console.error('Download from Drive error:', err);
                 }
+                throw err;
             }
         }
 
@@ -784,7 +799,6 @@
                 confetti({ particleCount: 35, spread: 50 });
             }
 
-            // 自動背景同步上傳
             autoUploadToDriveAppData();
 
             switchTab('gallery');
