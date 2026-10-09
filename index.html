@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nihongo Mine - 個人日語生字採集庫</title>
     <!-- Tailwind CSS -->
@@ -11,7 +11,7 @@
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Google Identity Services & GAPI -->
     <script src="https://accounts.google.com/gsi/client" async defer onload="gisLoaded()"></script>
@@ -98,9 +98,9 @@
 
                 <!-- Actions Right -->
                 <div class="flex items-center space-x-2">
-                    <button onclick="syncToGoogleDrive()" class="px-3.5 py-2 rounded-xl bg-sakura-500 hover:bg-sakura-600 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm">
+                    <button id="sync-btn" onclick="syncToGoogleDrive()" class="px-3.5 py-2 rounded-xl bg-sakura-500 hover:bg-sakura-600 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm">
                         <i data-lucide="cloud-upload" class="w-4 h-4"></i>
-                        <span class="hidden sm:inline">Google Drive 同步</span>
+                        <span id="sync-btn-text" class="hidden sm:inline">Google Drive 同步</span>
                     </button>
                     <button onclick="openBackupModal()" class="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 transition-colors">
                         <i data-lucide="hard-drive" class="w-4 h-4 text-sakura-500"></i>
@@ -157,15 +157,13 @@
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-sakura-500"></span> 1. 採集到的日文單詞 *
                             </label>
-                            <input type="text" id="input-word" required placeholder="例：木漏れ日, 恋愛" 
-                                class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp font-bold text-lg focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                            <input type="text" id="input-word" required placeholder="例：木漏れ日, 恋愛" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp font-bold text-lg focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-sakura-400"></span> 4. 單詞讀音 / 平假名
                             </label>
-                            <input type="text" id="input-reading" placeholder="例：こもれび, れんあい" 
-                                class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                            <input type="text" id="input-reading" placeholder="例：こもれび, れんあい" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
                         </div>
                     </div>
 
@@ -173,16 +171,14 @@
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-sakura-500"></span> 2. 中文 / 廣東話釋義 *
                         </label>
-                        <input type="text" id="input-definition" required placeholder="例：樹葉縫隙間透出的日光" 
-                            class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                        <input type="text" id="input-definition" required placeholder="例：樹葉縫隙間透出的日光" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-sakura-500"></span> 3. 採集到的原句 (Mined Sentence) *
                         </label>
-                        <textarea id="input-sentence" rows="2" required placeholder="例：木漏れ日がきれいに差し込んでいる。" 
-                            class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all"></textarea>
+                        <textarea id="input-sentence" rows="2" required placeholder="例：木漏れ日がきれいに差し込んでいる。" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all"></textarea>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
@@ -252,8 +248,7 @@
                 <div class="flex flex-col sm:flex-row items-center gap-3">
                     <div class="relative w-full">
                         <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5"></i>
-                        <input type="text" id="search-input" oninput="renderGallery()" placeholder="搜尋日文單詞、讀音、中文釋義或例句..." 
-                            class="w-full pl-12 pr-10 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50">
+                        <input type="text" id="search-input" oninput="renderGallery()" placeholder="搜尋日文單詞、讀音、中文釋義或例句..." class="w-full pl-12 pr-10 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50">
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
@@ -332,7 +327,7 @@
                         <div class="my-auto space-y-4 w-full">
                             <h3 id="fc-definition" class="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-slate-100">中文釋義</h3>
                             <div id="fc-image-box" class="hidden">
-                                <img id="fc-image" class="max-h-36 rounded-xl border border-slate-200 dark:border-slate-700 mx-auto shadow-md object-cover">
+                                <img id="fc-image" src="" class="max-h-36 rounded-xl border border-slate-200 dark:border-slate-700 mx-auto shadow-md object-cover">
                             </div>
                         </div>
 
@@ -395,9 +390,8 @@
 
     <script>
         /* ==========================================================================
-           GOOGLE DRIVE API & OAUTH SYNC CONFIG
+           GOOGLE DRIVE API & AUTO OAUTH SYNC CONFIG
            ========================================================================== */
-        // 請將以下 CLIENT_ID 替換為你的 Google Cloud Console Client ID
         const CLIENT_ID = '263970342404-v3br9qeutdfr89jov50rd6uo4hi5gc69.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
 
@@ -411,6 +405,7 @@
                     discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
                 });
                 gapiInited = true;
+                checkAutoSyncInit();
             });
         }
 
@@ -421,6 +416,25 @@
                 callback: '',
             });
             gsisInited = true;
+            checkAutoSyncInit();
+        }
+
+        async function checkAutoSyncInit() {
+            if (!gapiInited || !gsisInited) return;
+
+            const savedToken = localStorage.getItem('gdrive_token');
+            if (savedToken) {
+                gapi.client.setToken({ access_token: savedToken });
+                updateSyncBtnUI(true);
+                await downloadAndMergeFromDriveAppData(true);
+            }
+        }
+
+        function updateSyncBtnUI(isSynced) {
+            const btnText = document.getElementById('sync-btn-text');
+            if (btnText) {
+                btnText.textContent = isSynced ? '已連線 Google Drive' : 'Google Drive 同步';
+            }
         }
 
         async function syncToGoogleDrive() {
@@ -434,8 +448,13 @@
                     alert('Google 授權失敗！');
                     return;
                 }
-                await downloadAndMergeFromDriveAppData();
-                await uploadToDriveAppData();
+                if (resp.access_token) {
+                    localStorage.setItem('gdrive_token', resp.access_token);
+                    gapi.client.setToken({ access_token: resp.access_token });
+                    updateSyncBtnUI(true);
+                }
+                await downloadAndMergeFromDriveAppData(false);
+                await uploadToDriveAppData(false);
             };
 
             if (gapi.client.getToken() === null) {
@@ -445,66 +464,100 @@
             }
         }
 
-        async function uploadToDriveAppData() {
-            const allData = await dbGetAll();
-            const fileContent = JSON.stringify(allData);
-            const file = new Blob([fileContent], { type: 'application/json' });
+        async function autoUploadToDriveAppData() {
+            const savedToken = localStorage.getItem('gdrive_token');
+            if (!savedToken || !gapiInited) return;
 
-            const response = await gapi.client.drive.files.list({
-                q: "name='nihongo_mine_data.json' and 'appDataFolder' in parents",
-                spaces: 'appDataFolder',
-                fields: 'files(id, name)',
-            });
-
-            const existingFiles = response.result.files;
-            let fileId = existingFiles.length > 0 ? existingFiles[0].id : null;
-
-            const metadata = {
-                name: 'nihongo_mine_data.json',
-                mimeType: 'application/json',
-                parents: fileId ? [] : ['appDataFolder'],
-            };
-
-            const accessToken = gapi.client.getToken().access_token;
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-            form.append('file', file);
-
-            const url = fileId
-                ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`
-                : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-
-            await fetch(url, {
-                method: fileId ? 'PATCH' : 'POST',
-                headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
-                body: form,
-            });
-
-            alert('Google Drive 雙向同步成功！');
+            gapi.client.setToken({ access_token: savedToken });
+            await uploadToDriveAppData(true);
         }
 
-        async function downloadAndMergeFromDriveAppData() {
-            const response = await gapi.client.drive.files.list({
-                q: "name='nihongo_mine_data.json' and 'appDataFolder' in parents",
-                spaces: 'appDataFolder',
-                fields: 'files(id, name)',
-            });
+        async function uploadToDriveAppData(isSilent = false) {
+            try {
+                const allData = await dbGetAll();
+                const fileContent = JSON.stringify(allData);
+                const file = new Blob([fileContent], { type: 'application/json' });
 
-            const files = response.result.files;
-            if (files.length === 0) return;
+                const response = await gapi.client.drive.files.list({
+                    q: "name='nihongo_mine_data.json' and 'appDataFolder' in parents",
+                    spaces: 'appDataFolder',
+                    fields: 'files(id, name)',
+                });
 
-            const fileId = files[0].id;
-            const res = await gapi.client.drive.files.get({
-                fileId: fileId,
-                alt: 'media',
-            });
+                const existingFiles = response.result.files;
+                let fileId = existingFiles.length > 0 ? existingFiles[0].id : null;
 
-            const remoteData = res.result;
-            if (Array.isArray(remoteData)) {
-                for (let item of remoteData) {
-                    await dbSaveVocab(item);
+                const metadata = {
+                    name: 'nihongo_mine_data.json',
+                    mimeType: 'application/json',
+                    parents: fileId ? [] : ['appDataFolder'],
+                };
+
+                const currentTokenObj = gapi.client.getToken();
+                if (!currentTokenObj || !currentTokenObj.access_token) return;
+
+                const accessToken = currentTokenObj.access_token;
+                const form = new FormData();
+                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                form.append('file', file);
+
+                const url = fileId
+                    ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`
+                    : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+
+                const res = await fetch(url, {
+                    method: fileId ? 'PATCH' : 'POST',
+                    headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
+                    body: form,
+                });
+
+                if (res.status === 401) {
+                    localStorage.removeItem('gdrive_token');
+                    updateSyncBtnUI(false);
+                    return;
                 }
-                await loadVocabs();
+
+                if (!isSilent) {
+                    alert('Google Drive 雙向同步成功！');
+                } else {
+                    console.log('背景自動同步成功！');
+                }
+            } catch (err) {
+                console.error('Upload to Drive error:', err);
+            }
+        }
+
+        async function downloadAndMergeFromDriveAppData(isSilent = false) {
+            try {
+                const response = await gapi.client.drive.files.list({
+                    q: "name='nihongo_mine_data.json' and 'appDataFolder' in parents",
+                    spaces: 'appDataFolder',
+                    fields: 'files(id, name)',
+                });
+
+                const files = response.result.files;
+                if (files.length === 0) return;
+
+                const fileId = files[0].id;
+                const res = await gapi.client.drive.files.get({
+                    fileId: fileId,
+                    alt: 'media',
+                });
+
+                const remoteData = res.result;
+                if (Array.isArray(remoteData)) {
+                    for (let item of remoteData) {
+                        await dbSaveVocab(item);
+                    }
+                    await loadVocabs();
+                }
+            } catch (err) {
+                if (err.status === 401) {
+                    localStorage.removeItem('gdrive_token');
+                    updateSyncBtnUI(false);
+                } else {
+                    console.error('Download from Drive error:', err);
+                }
             }
         }
 
@@ -547,7 +600,7 @@
                 const tx = db.transaction('vocabs', 'readonly');
                 const store = tx.objectStore('vocabs');
                 const req = store.getAll();
-                req.onsuccess = () => resolve(req.result);
+                req.onsuccess = () => resolve(req.result || []);
                 req.onerror = (e) => reject(e);
             });
         }
@@ -731,6 +784,9 @@
                 confetti({ particleCount: 35, spread: 50 });
             }
 
+            // 自動背景同步上傳
+            autoUploadToDriveAppData();
+
             switchTab('gallery');
         }
 
@@ -834,6 +890,7 @@
             if (confirm('確定要刪除這張採集卡片嗎？')) {
                 await dbDelete(id);
                 await loadVocabs();
+                autoUploadToDriveAppData();
             }
         }
 
@@ -959,6 +1016,7 @@
                             await dbSaveVocab(item);
                         }
                         await loadVocabs();
+                        autoUploadToDriveAppData();
                         alert(`成功匯入 ${list.length} 個生字卡片！`);
                         closeBackupModal();
                     }
