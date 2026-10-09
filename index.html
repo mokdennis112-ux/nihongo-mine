@@ -358,7 +358,6 @@
                         <button onclick="document.getElementById('fc-filter-date').value=''; setupFlashcards();" class="text-[10px] text-slate-400 hover:text-rose-500">重置</button>
                     </div>
 
-                    <!-- 重新排列的模式選單 -->
                     <select id="fc-mode-select" onchange="changeFcMode()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200">
                         <option value="chinese_front">1. 中文模式 (三頁：釋義 -> 手寫板 -> 背面全資料)</option>
                         <option value="audio_only">2. 聽力模式 (聲音在正面 -> 背面全資料)</option>
@@ -1274,26 +1273,28 @@
                                     ` : ''}
                                 </div>
 
-                                <!-- 紅圈區域優化：把圖片縮圖放在右上角，縮小編輯與刪除按鈕 -->
-                                <div class="flex items-center gap-1.5 shrink-0">
+                                <!-- Grid View 右上角區域：放大圖片至紅圈尺寸，微型編輯/刪除按鈕 -->
+                                <div class="flex items-start gap-1.5 shrink-0">
                                     ${v.image ? `
-                                        <img src="${v.image}" onclick="openImageModal('${v.image}')" class="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform shadow-sm" title="點擊放大圖片">
+                                        <img src="${v.image}" onclick="openImageModal('${v.image}')" class="w-28 h-20 rounded-xl object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform shadow-sm" title="點擊放大圖片">
                                     ` : ''}
-                                    <button onclick="openEditModal('${v.id}')" class="text-slate-300 hover:text-sakura-500 p-1 transition-colors" title="編輯">
-                                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                                    </button>
-                                    <button onclick="deleteEntry('${v.id}')" class="text-slate-300 hover:text-rose-500 p-1 transition-colors" title="刪除">
-                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                    </button>
+                                    <div class="flex items-center gap-1 pt-0.5">
+                                        <button onclick="openEditModal('${v.id}')" class="text-slate-300 hover:text-sakura-500 transition-colors" title="編輯">
+                                            <i data-lucide="edit-3" class="w-3 h-3"></i>
+                                        </button>
+                                        <button onclick="deleteEntry('${v.id}')" class="text-slate-300 hover:text-rose-500 transition-colors" title="刪除">
+                                            <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
                             <p class="text-sm font-bold text-slate-700 dark:text-slate-200 mt-2">${v.definition}</p>
                             
+                            <!-- 移除例句及翻譯中的「」符號，日文在上、翻譯在下 -->
                             ${v.sentence ? `
                                 <div class="mt-3 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50 space-y-1">
-                                    <p class="text-xs text-slate-700 dark:text-slate-300 font-jp">「${v.sentence}」</p>
-                                    ${v.sentenceTr ? `<p class="text-[11px] text-slate-400">${v.sentenceTr}</p>` : ''}
+                                    <p class="text-xs text-slate-700 dark:text-slate-300 font-jp">${v.sentence}</p>${v.sentenceTr ? `<p class="text-[11px] text-slate-400">${v.sentenceTr}</p>` : ''}
                                 </div>
                             ` : ''}
                         </div>
@@ -1314,40 +1315,48 @@
                     </div>
                 `).join('');
             } else {
-                // 藍圈區域優化：把縮圖、聲音及按鈕集中靠右，填補空白
+                // List View 依要求更新：
+                // 1. 讀音取消括號
+                // 2. 圖片放大至幾乎填滿上下高度 (w-20 h-14)，位於音訊按鈕左邊
+                // 3. 微型編輯/刪除按鈕
+                // 4. 移除例句「」，日文在上、翻譯在下
                 container.className = "space-y-3";
                 container.innerHTML = filtered.map(v => `
-                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div class="flex items-center gap-4">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-3.5 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
                             <button onclick="speakJapanese('${v.word}')" class="p-2.5 rounded-xl bg-sakura-50 text-sakura-600 hover:bg-sakura-100 transition-colors shrink-0">
                                 <i data-lucide="volume-2" class="w-5 h-5"></i>
                             </button>
                             <div>
                                 <div class="flex items-center gap-2">
                                     <span class="text-lg font-black text-slate-800 dark:text-slate-100 font-jp">${v.word}</span>
-                                    ${v.reading ? `<span class="text-xs text-sakura-500 font-jp">(${v.reading})</span>` : ''}
+                                    ${v.reading ? `<span class="text-xs text-sakura-500 font-jp">${v.reading}</span>` : ''}
                                     ${v.pos ? `<span class="px-2 py-0.5 text-[9px] font-bold rounded bg-sakura-50 text-sakura-600 dark:bg-sakura-900/40 dark:text-sakura-400">[${v.pos}${v.verbType ? ` · ${v.verbType}` : ''}]</span>` : ''}
                                 </div>
-                                <p class="text-xs font-bold text-slate-600 dark:text-slate-300">${v.definition}</p>
-                                ${v.sentence ? `<p class="text-[11px] text-slate-400 font-jp mt-0.5 line-clamp-1">「${v.sentence}」 ${v.sentenceTr ? `- ${v.sentenceTr}` : ''}</p>` : ''}
+                                <p class="text-xs font-bold text-slate-600 dark:text-slate-300 mt-0.5">${v.definition}</p>
+                                ${v.sentence ? `
+                                    <div class="text-[11px] font-jp mt-1 space-y-0.5">
+                                        <p class="text-slate-600 dark:text-slate-300">${v.sentence}</p>${v.sentenceTr ? `<p class="text-slate-400">${v.sentenceTr}</p>` : ''}
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-end gap-2.5 shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100 dark:border-slate-700">
+                        <div class="flex items-center justify-end gap-2 shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100 dark:border-slate-700">
+                            ${v.image ? `
+                                <img src="${v.image}" onclick="openImageModal('${v.image}')" class="w-20 h-14 rounded-xl object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform shadow-sm" title="點擊放大圖片">
+                            ` : ''}
                             ${v.audio ? `
                                 <button onclick="playVocabAudio('${v.id}')" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-sakura-500 hover:bg-slate-200 transition-colors" title="播放例句音訊">
                                     <i data-lucide="music" class="w-4 h-4"></i>
                                 </button>
                             ` : ''}
-                            ${v.image ? `
-                                <img src="${v.image}" onclick="openImageModal('${v.image}')" class="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform shadow-sm" title="點擊放大圖片">
-                            ` : ''}
-                            <div class="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                            <button onclick="openEditModal('${v.id}')" class="text-slate-300 hover:text-sakura-500 p-1 transition-colors" title="編輯">
-                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            <div class="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-0.5"></div>
+                            <button onclick="openEditModal('${v.id}')" class="text-slate-300 hover:text-sakura-500 transition-colors" title="編輯">
+                                <i data-lucide="edit-3" class="w-3 h-3"></i>
                             </button>
-                            <button onclick="deleteEntry('${v.id}')" class="text-slate-300 hover:text-rose-500 p-1 transition-colors" title="刪除">
-                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            <button onclick="deleteEntry('${v.id}')" class="text-slate-300 hover:text-rose-500 transition-colors" title="刪除">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i>
                             </button>
                         </div>
                     </div>
@@ -1496,7 +1505,6 @@
             updateFlashcard();
         }
 
-        // 手寫板邏輯（卡片內與全螢幕模態框）
         function initCardCanvas() {
             const canvas = document.getElementById('hw-card-canvas');
             if (!canvas) return;
@@ -1598,7 +1606,6 @@
             };
         }
 
-        // 背面完整解答渲染（所有音訊按鈕收納在右上角，內容向上調整 fit 卡片）
         function renderFullBackContent(cur) {
             return `
                 <div class="space-y-2.5 w-full max-w-md mx-auto text-center flex flex-col items-center justify-center">
@@ -1618,8 +1625,7 @@
 
                     ${cur.sentence ? `
                         <div class="w-full bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-700/50 space-y-0.5 text-left">
-                            <p class="text-xs text-slate-700 dark:text-slate-300 font-jp">「${cur.sentence}」</p>
-                            ${cur.sentenceTr ? `<p class="text-[11px] text-slate-400">${cur.sentenceTr}</p>` : ''}
+                            <p class="text-xs text-slate-700 dark:text-slate-300 font-jp">${cur.sentence}</p>${cur.sentenceTr ? `<p class="text-[11px] text-slate-400">${cur.sentenceTr}</p>` : ''}
                         </div>
                     ` : ''}
 
@@ -1645,7 +1651,6 @@
             document.getElementById('fc-status').textContent = `進度: ${state.fcIndex + 1} / ${state.fcDeck.length}`;
             document.getElementById('fc-progress').style.width = `${((state.fcIndex + 1) / state.fcDeck.length) * 100}%`;
 
-            // 第一頁與手寫頁均不需要右上角發音按鈕，統一於第三頁右上角集中顯示
             topRightActions.innerHTML = '';
 
             if (state.fcMode === 'standard') {
@@ -1656,7 +1661,7 @@
                         <ruby class="text-4xl sm:text-5xl font-black text-slate-800 dark:text-slate-100 font-jp tracking-wide">
                             ${cur.word} <rt class="text-base text-sakura-500 font-medium">${cur.reading || ''}</rt>
                         </ruby>
-                        ${cur.sentence ? `<p class="text-sm font-jp text-slate-500 dark:text-slate-400 italic max-w-md mx-auto line-clamp-3 mt-4">「${cur.sentence}」</p>` : ''}
+                        ${cur.sentence ? `<p class="text-sm font-jp text-slate-500 dark:text-slate-400 italic max-w-md mx-auto line-clamp-3 mt-4">${cur.sentence}</p>` : ''}
                     `;
                 } else {
                     cardLabel.textContent = "背面：釋義與詳細資訊";
