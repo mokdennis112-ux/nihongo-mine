@@ -328,7 +328,7 @@
                             <button id="filter-audio-btn" onclick="toggleMediaFilter('audio')" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 hover:bg-slate-100 dark:hover:bg-slate-700">
                                 <i data-lucide="music" class="w-3.5 h-3.5 text-sakura-500"></i> 有音訊
                             </button>
-                            <button id="filter-image-btn" onclick="toggleMediaFilter('image')" class="toggleMediaFilter('image')" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 hover:bg-slate-100 dark:hover:bg-slate-700">
+                            <button id="filter-image-btn" onclick="toggleMediaFilter('image')" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 hover:bg-slate-100 dark:hover:bg-slate-700">
                                 <i data-lucide="image" class="w-3.5 h-3.5 text-rose-500"></i> 有截圖
                             </button>
                         </div>
@@ -854,15 +854,7 @@
                 const audio = new Audio(audioUrl);
                 audio.play();
             } catch (err) {
-                console.warn("雲端 TTS 請求失敗，自動降級使用瀏覽器原生語音：", err);
-                
-                if ('speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
-                    const u = new SpeechSynthesisUtterance(text);
-                    u.lang = 'ja-JP';
-                    u.rate = 0.9;
-                    window.speechSynthesis.speak(u);
-                }
+                console.warn("雲端 TTS 請求失敗：", err);
             }
         }
 
