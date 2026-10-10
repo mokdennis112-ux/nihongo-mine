@@ -828,7 +828,7 @@
         }
 
         /* ==========================================================================
-           NATIVE NATIVE SPEECH SYNTHESIS ENGINE (iOS Siri / Edge Built-in)
+           EDGE / iOS BUILT-IN SPEECH SYNTHESIS ENGINE (WITH MICROSOFT NATURAL VOICES)
            ========================================================================== */
         function speakJapanese(text) {
             if (!text) return;
@@ -837,8 +837,26 @@
                 const u = new SpeechSynthesisUtterance(text);
                 u.lang = 'ja-JP';
                 u.rate = 0.9;
+
+                const voices = window.speechSynthesis.getVoices();
+                // 優先捕捉 Edge 內置的高品質雲端自然語音 (Nanami / Keita Neural)
+                const preferredVoice = voices.find(v => 
+                    v.lang === 'ja-JP' && (v.name.includes('Nanami') || v.name.includes('Keita') || v.name.includes('Natural'))
+                ) || voices.find(v => v.lang === 'ja-JP' || v.lang === 'ja');
+
+                if (preferredVoice) {
+                    u.voice = preferredVoice;
+                }
+
                 window.speechSynthesis.speak(u);
             }
+        }
+
+        // 確保瀏覽器加載完成語音清單
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                window.speechSynthesis.getVoices();
+            };
         }
 
         function toggleVerbTypeVisibility(posSelectId, containerId) {
@@ -902,12 +920,6 @@
                 store.delete(id);
                 tx.oncomplete = () => resolve();
                 tx.onerror = (e) => reject(e);
-            });
-        }
-
-        function dbClearAll() {
-            return new /promise/({
-                // handled below cleanly
             });
         }
 
