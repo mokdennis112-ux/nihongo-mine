@@ -1,0 +1,1989 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新しい言葉 - 日常日語生字採集庫</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Google Identity Services & GAPI -->
+    <script src="https://accounts.google.com/gsi/client" async defer onload="gisLoaded()"></script>
+    <script src="https://apis.google.com/js/api.js" async defer onload="gapiLoaded()"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        sakura: {
+                            50: '#fff5f7',
+                            100: '#ffe3ec',
+                            200: '#fccada',
+                            400: '#f36890',
+                            500: '#e83e6b',
+                            600: '#d52150',
+                            900: '#4c0819',
+                        },
+                        japan: {
+                            50: '#f4f7f9',
+                            100: '#e3e9ef',
+                            600: '#2c3e50',
+                            800: '#1a252f',
+                            900: '#0f171e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Noto Sans TC', 'Noto Sans JP', 'sans-serif'],
+                        jp: ['Noto Sans JP', 'Noto Sans TC', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.3); border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); }
+
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+
+        .sakura-pattern {
+            background-image: radial-gradient(circle at 100% 150%, transparent 20%, rgba(232, 62, 107, 0.03) 21%, rgba(232, 62, 107, 0.03) 34%, transparent 35%, transparent),
+                              radial-gradient(circle at 0% 150%, transparent 20%, rgba(232, 62, 107, 0.03) 21%, rgba(232, 62, 107, 0.03) 34%, transparent 35%, transparent);
+            background-size: 40px 20px;
+        }
+
+        input[type="date"] {
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-japan-900 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col transition-colors duration-300 sakura-pattern">
+
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-japan-800/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-700/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-2">
+                
+                <!-- Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('add')">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sakura-500 to-sakura-400 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-sakura-500/25">
+                        <i data-lucide="flower-2" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <span class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-sakura-600 to-rose-500 dark:from-sakura-400 dark:to-rose-300 bg-clip-text text-transparent">新しい言葉</span>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-400 hidden sm:block">日常日語生字採集庫</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <nav class="hidden md:flex space-x-1 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200/60 dark:border-slate-700/50">
+                    <button id="nav-add" onclick="switchTab('add')" class="nav-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 text-sakura-600 bg-white dark:bg-slate-700 shadow-sm">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i> 新增單詞
+                    </button>
+                    <button id="nav-gallery" onclick="switchTab('gallery')" class="nav-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                        <i data-lucide="library" class="w-4 h-4"></i> 生字卡片庫 (<span id="total-count-nav">0</span>)
+                    </button>
+                    <button id="nav-cards" onclick="switchTab('cards')" class="nav-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                        <i data-lucide="layers" class="w-4 h-4"></i> Flashcards 溫習
+                    </button>
+                </nav>
+
+                <!-- Actions Right -->
+                <div class="flex items-center space-x-2">
+                    <button id="sync-btn" onclick="syncToGoogleDrive()" class="px-3.5 py-2 rounded-xl bg-sakura-500 hover:bg-sakura-600 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm">
+                        <i data-lucide="cloud-upload" class="w-4 h-4"></i>
+                        <span id="sync-btn-text" class="hidden sm:inline">Google Drive 同步</span>
+                    </button>
+                    
+                    <button id="logout-btn" onclick="logoutGoogleAccount()" class="hidden px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/50 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold flex items-center gap-1 transition-colors">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">登出</span>
+                    </button>
+
+                    <button onclick="openBackupModal()" class="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 transition-colors">
+                        <i data-lucide="hard-drive" class="w-4 h-4 text-sakura-500"></i>
+                        <span class="hidden sm:inline">備份/匯入</span>
+                    </button>
+
+                    <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
+                        <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Bar -->
+        <div class="md:hidden flex border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-japan-800 px-2 py-1.5 justify-around text-xs font-semibold">
+            <button id="mob-add" onclick="switchTab('add')" class="mob-btn flex flex-col items-center py-1 px-3 text-sakura-600">
+                <i data-lucide="plus-circle" class="w-5 h-5 mb-0.5"></i> 新增單詞
+            </button>
+            <button id="mob-gallery" onclick="switchTab('gallery')" class="mob-btn flex flex-col items-center py-1 px-3 text-slate-500">
+                <i data-lucide="library" class="w-5 h-5 mb-0.5"></i> 生字卡片庫
+            </button>
+            <button id="mob-cards" onclick="switchTab('cards')" class="mob-btn flex flex-col items-center py-1 px-3 text-slate-500">
+                <i data-lucide="layers" class="w-5 h-5 mb-0.5"></i> Flashcards
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ADD TAB -->
+        <div id="view-add" class="tab-view space-y-6 max-w-3xl mx-auto">
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-700/80 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-6">
+                
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-2 rounded-xl bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500">
+                            <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100">新增日語採集單詞</h2>
+                            <p class="text-xs text-slate-400">輸入日常看動漫、日劇或閱讀時採集的生字</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="clearForm()" class="text-xs text-slate-400 hover:text-rose-500 font-semibold flex items-center gap-1">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> 清空欄位
+                    </button>
+                </div>
+
+                <form id="vocab-form" onsubmit="handleVocabSubmit(event)" class="space-y-5">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-sakura-500"></span> 1. 採集到的日文單詞 *
+                            </label>
+                            <input type="text" id="input-word" required oninput="handleWordInput(this.value)" placeholder="例：木漏れ日, 恋愛" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp font-bold text-lg focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-sakura-400"></span> 2. 單詞讀音 / 平假名
+                            </label>
+                            <input type="text" id="input-reading" placeholder="例：こもれび, れんあい" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-sakura-500"></span> 詞性 (Part of Speech)
+                            </label>
+                            <select id="input-pos" onchange="toggleVerbTypeVisibility('input-pos', 'verb-type-container')" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                                <option value="">-- 請選擇詞性 --</option>
+                                <option value="名詞">名詞</option>
+                                <option value="動詞">動詞</option>
+                                <option value="形容詞">形容詞 (い形)</option>
+                                <option value="形容動詞">形容動詞 (な形)</option>
+                            </select>
+                        </div>
+                        <div id="verb-type-container" class="hidden">
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-sakura-400"></span> 動詞分類 (Verb Type)
+                            </label>
+                            <select id="input-verb-type" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                                <option value="">-- 請選擇動詞分類 --</option>
+                                <option value="自動詞">自動詞</option>
+                                <option value="他動詞">他動詞</option>
+                                <option value="自他動詞">自他動詞</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-sakura-500"></span> 3. 中文 / 廣東話釋義 *
+                        </label>
+                        <input type="text" id="input-definition" required placeholder="例：樹葉縫隙間透出的日光" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-sakura-500"></span> 4. 採集日文例句 (Japanese Sentence)
+                            </label>
+                            <textarea id="input-sentence" rows="2" placeholder="例：木漏れ日がきれいに差し込んでいる。" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-sakura-400"></span> 5. 例句中文翻譯 (Sentence Translation)
+                            </label>
+                            <textarea id="input-sentence-tr" rows="2" placeholder="例：樹葉透出的日光美美地照進來。" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
+                                <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 單詞音訊 (WORD AUDIO)</span>
+                                <span id="word-audio-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
+                            </label>
+                            <div id="drop-zone-word-audio" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
+                                <input type="file" id="file-word-audio" accept="audio/*" onchange="handleWordAudioUpload(event)" class="hidden">
+                                <div id="word-audio-preview-container" class="hidden space-y-2">
+                                    <audio id="word-audio-element" controls class="w-full h-8 max-w-full"></audio>
+                                    <button type="button" onclick="clearWordAudio(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除
+                                    </button>
+                                </div>
+                                <div id="word-audio-prompt" onclick="document.getElementById('file-word-audio').click()" class="py-2">
+                                    <i data-lucide="upload-cloud" class="w-6 h-6 mx-auto text-slate-400 mb-1"></i>
+                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">上載單詞音訊</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
+                                <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 例句音訊 (SENTENCE AUDIO)</span>
+                                <span id="audio-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
+                            </label>
+                            
+                            <div id="drop-zone-audio" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
+                                <input type="file" id="file-audio" accept="audio/*" onchange="handleAudioUpload(event)" class="hidden">
+                                
+                                <div id="audio-preview-container" class="hidden space-y-2">
+                                    <audio id="audio-element" controls class="w-full h-8 max-w-full"></audio>
+                                    <button type="button" onclick="clearAudio(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除
+                                    </button>
+                                </div>
+
+                                <div id="audio-prompt" onclick="document.getElementById('file-audio').click()" class="py-2">
+                                    <i data-lucide="upload-cloud" class="w-6 h-6 mx-auto text-slate-400 mb-1"></i>
+                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">上載例句音訊</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
+                                <span class="flex items-center gap-1.5"><i data-lucide="image" class="w-4 h-4 text-sakura-500"></i> 參考截圖 (PHOTO)</span>
+                                <span id="image-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
+                            </label>
+
+                            <div id="drop-zone-image" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
+                                <input type="file" id="file-image" accept="image/*" onchange="handleImageUpload(event)" class="hidden">
+                                
+                                <div id="image-preview-container" class="hidden space-y-2">
+                                    <img id="image-element" src="" class="max-h-20 mx-auto rounded-xl shadow-md border border-slate-200 dark:border-slate-700 object-cover">
+                                    <button type="button" onclick="clearImage(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除
+                                    </button>
+                                </div>
+
+                                <div id="image-prompt" onclick="document.getElementById('file-image').click()" class="py-2">
+                                    <i data-lucide="camera" class="w-6 h-6 mx-auto text-slate-400 mb-1"></i>
+                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">上載或貼上截圖</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4">
+                        <button type="submit" class="w-full py-4 bg-gradient-to-r from-sakura-500 to-rose-500 hover:from-sakura-600 hover:to-rose-600 text-white font-extrabold text-base rounded-2xl shadow-lg shadow-sakura-500/25 transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="check-circle" class="w-5 h-5"></i> 保存卡片
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <!-- GALLERY TAB -->
+        <div id="view-gallery" class="tab-view hidden space-y-6">
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200/80 dark:border-slate-700/80 space-y-4">
+                <div class="flex flex-col lg:flex-row items-center gap-3">
+                    <div class="relative w-full lg:w-1/3">
+                        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5"></i>
+                        <input type="text" id="search-input" oninput="renderGallery()" placeholder="搜尋單詞、釋義或例句..." class="w-full pl-12 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50">
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2 w-full lg:w-2/3 justify-between lg:justify-end">
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+                            <input type="date" id="filter-date" lang="en-GB" onchange="renderGallery()" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
+                            <button onclick="document.getElementById('filter-date').value=''; renderGallery();" class="text-[11px] text-slate-400 hover:text-rose-500 font-semibold">清除日曆</button>
+                        </div>
+
+                        <select id="filter-pos" onchange="renderGallery()" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
+                            <option value="">所有詞性</option>
+                            <option value="名詞">名詞</option>
+                            <option value="動詞">動詞</option>
+                            <option value="形容詞">形容詞 (い形)</option>
+                            <option value="形容動詞">形容動詞 (な形)</option>
+                        </select>
+
+                        <select id="filter-verb-type" onchange="renderGallery()" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
+                            <option value="">所有動詞類型</option>
+                            <option value="自動詞">自動詞</option>
+                            <option value="他動詞">他動詞</option>
+                            <option value="自他動詞">自他動詞</option>
+                        </select>
+
+                        <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-700">
+                            <button id="view-mode-grid" onclick="setGalleryViewMode('grid')" class="p-2 rounded-xl text-sakura-600 bg-white dark:bg-slate-800 shadow-sm transition-all" title="網格檢視">
+                                <i data-lucide="grid" class="w-4 h-4"></i>
+                            </button>
+                            <button id="view-mode-list" onclick="setGalleryViewMode('list')" class="p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 transition-all" title="列表檢視">
+                                <i data-lucide="list" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between px-2 text-xs font-semibold text-slate-500">
+                <span>採集數量: <strong id="gallery-count" class="text-sakura-600 dark:text-sakura-400">0</strong> 個</span>
+            </div>
+
+            <div id="gallery-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+            <div id="gallery-empty" class="hidden text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
+                <i data-lucide="inbox" class="w-12 h-12 mx-auto text-slate-300 mb-3"></i>
+                <h3 class="font-bold text-slate-700 dark:text-slate-300">目前未有採集卡片</h3>
+                <p class="text-xs text-slate-400 mt-1">切換至「新增單詞」頁面開始建立第一個日語單詞！</p>
+            </div>
+        </div>
+
+        <!-- FLASHCARDS TAB -->
+        <div id="view-cards" class="tab-view hidden max-w-3xl mx-auto space-y-6">
+            <div class="flex flex-col sm:flex-row items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 rounded-xl bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500">
+                        <i data-lucide="layers" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">Flashcards 溫習</h3>
+                        <p id="fc-status" class="text-xs text-slate-400">進度: 0 / 0</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                    <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <input type="date" id="fc-filter-date" lang="en-GB" onchange="setupFlashcards()" class="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
+                        <button onclick="document.getElementById('fc-filter-date').value=''; setupFlashcards();" class="text-[10px] text-slate-400 hover:text-rose-500">重置</button>
+                    </div>
+
+                    <select id="fc-filter-pos" onchange="setupFlashcards()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        <option value="">所有詞性</option>
+                        <option value="名詞">名詞</option>
+                        <option value="動詞">動詞</option>
+                        <option value="形容詞">形容詞</option>
+                        <option value="形容動詞">形容動詞</option>
+                    </select>
+
+                    <select id="fc-filter-verb-type" onchange="setupFlashcards()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        <option value="">所有動詞類型</option>
+                        <option value="自動詞">自動詞</option>
+                        <option value="他動詞">他動詞</option>
+                        <option value="自他動詞">自他動詞</option>
+                    </select>
+
+                    <select id="fc-mode-select" onchange="changeFcMode()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        <option value="chinese_front">1. 中文模式 (三頁：釋義 -> 手寫板 -> 背面全資料)</option>
+                        <option value="audio_only">2. 聽力模式 (聲音在正面 -> 背面全資料)</option>
+                        <option value="standard">3. 標準模式 (日語在正面)</option>
+                    </select>
+
+                    <button onclick="shuffleDeck()" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition-colors flex items-center gap-1 shrink-0">
+                        <i data-lucide="shuffle" class="w-3.5 h-3.5"></i> 隨機打亂
+                    </button>
+                </div>
+            </div>
+
+            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                <div id="fc-progress" class="bg-sakura-500 h-2 transition-all duration-300 w-0"></div>
+            </div>
+
+            <div class="perspective-1000 min-h-[420px]">
+                <div id="flashcard-3d" class="relative w-full h-[420px] rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-800 flex flex-col justify-between overflow-hidden">
+                    
+                    <div id="fc-card-body" onclick="flipFlashcard()" class="w-full h-full p-6 sm:p-7 flex flex-col justify-between items-center text-center cursor-pointer">
+                        <div class="w-full flex justify-between items-center text-xs font-semibold text-slate-400 shrink-0">
+                            <span id="fc-card-label">正面</span>
+                            <div id="fc-top-right-actions" class="flex items-center gap-2" onclick="event.stopPropagation()"></div>
+                        </div>
+
+                        <div id="fc-card-content" class="my-auto w-full flex-grow flex flex-col justify-center items-center py-2"></div>
+
+                        <p class="text-xs text-slate-400 flex items-center gap-1 shrink-0 pt-2">
+                            <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> <span id="fc-click-hint">點擊卡片切換頁面</span>
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-4">
+                <button onclick="prevFlashcard()" class="px-5 py-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 transition-all text-xs sm:text-sm flex items-center gap-2">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> 上一張
+                </button>
+                <button onclick="nextFlashcard()" class="px-5 py-3 rounded-2xl bg-sakura-500 hover:bg-sakura-600 text-white font-bold transition-all text-xs sm:text-sm flex items-center gap-2 shadow-md shadow-sakura-500/20">
+                    下一張 <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FULLSCREEN HANDWRITING MODAL -->
+    <div id="modal-canvas" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex flex-col items-center justify-center p-2 sm:p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-3xl w-full h-[88vh] p-4 sm:p-5 space-y-3 shadow-2xl border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-between">
+            <div class="w-full flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-2.5 shrink-0">
+                <h3 class="font-bold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <i data-lucide="pen-tool" class="w-5 h-5 text-sakura-500"></i> 全螢幕手寫練習畫板
+                </h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="clearPopupCanvas()" class="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 text-xs font-bold transition-colors">
+                        清除畫板
+                    </button>
+                    <button onclick="completePopupCanvas()" class="px-3.5 py-1.5 rounded-xl bg-sakura-500 hover:bg-sakura-600 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i> 完成
+                    </button>
+                    <button onclick="closeCanvasModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="w-full flex-grow relative overflow-hidden rounded-2xl border-2 border-dashed border-sakura-400 dark:border-slate-600 bg-slate-50 dark:bg-slate-900">
+                <canvas id="popup-hw-canvas" class="w-full h-full touch-none cursor-crosshair block"></canvas>
+            </div>
+            
+            <p class="text-xs text-slate-400 shrink-0">提示：手寫完成後點擊「完成」即可同步至卡片內畫板</p>
+        </div>
+    </div>
+
+    <!-- EDIT MODAL -->
+    <div id="edit-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-5 shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-3">
+                <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-sakura-500"></i> 編輯採集卡片
+                </h3>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="edit-form" onsubmit="handleEditSubmit(event)" class="space-y-4">
+                <input type="hidden" id="edit-id">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">日文單詞 *</label>
+                        <input type="text" id="edit-word" required oninput="handleEditWordInput(this.value)" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 font-jp font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">平假名 / 讀音</label>
+                        <input type="text" id="edit-reading" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 font-jp">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">詞性</label>
+                        <select id="edit-pos" onchange="toggleVerbTypeVisibility('edit-pos', 'edit-verb-type-container')" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100">
+                            <option value="">-- 請選擇詞性 --</option>
+                            <option value="名詞">名詞</option>
+                            <option value="動詞">動詞</option>
+                            <option value="形容詞">形容詞 (い形)</option>
+                            <option value="形容動詞">形容動詞 (な形)</option>
+                        </select>
+                    </div>
+                    <div id="edit-verb-type-container" class="hidden">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">動詞分類</label>
+                        <select id="edit-verb-type" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100">
+                            <option value="">-- 請選擇動詞分類 --</option>
+                            <option value="自動詞">自動詞</option>
+                            <option value="他動詞">他動詞</option>
+                            <option value="自他動詞">自他動詞</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">中文 / 廣東話釋義 *</label>
+                    <input type="text" id="edit-definition" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">採集日文例句</label>
+                        <textarea id="edit-sentence" rows="2" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 font-jp"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">例句中文翻譯</label>
+                        <textarea id="edit-sentence-tr" rows="2" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100"></textarea>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 單詞音訊</span>
+                            <span id="edit-word-audio-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
+                        </label>
+                        <div id="edit-drop-zone-word-audio" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
+                            <input type="file" id="edit-file-word-audio" accept="audio/*" onchange="handleEditWordAudioUpload(event)" class="hidden">
+                            <div id="edit-word-audio-preview-container" class="hidden space-y-2">
+                                <audio id="edit-word-audio-element" controls class="w-full h-8 max-w-full"></audio>
+                                <button type="button" onclick="clearEditWordAudio(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除
+                                </button>
+                            </div>
+                            <div id="edit-word-audio-prompt" onclick="document.getElementById('edit-file-word-audio').click()" class="py-2">
+                                <i data-lucide="upload-cloud" class="w-5 h-5 mx-auto text-slate-400 mb-1"></i>
+                                <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">選擇音訊</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 例句音訊</span>
+                            <span id="edit-audio-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
+                        </label>
+                        <div id="edit-drop-zone-audio" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
+                            <input type="file" id="edit-file-audio" accept="audio/*" onchange="handleEditAudioUpload(event)" class="hidden">
+                            <div id="edit-audio-preview-container" class="hidden space-y-2">
+                                <audio id="edit-audio-element" controls class="w-full h-8 max-w-full"></audio>
+                                <button type="button" onclick="clearEditAudio(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除
+                                </button>
+                            </div>
+                            <div id="edit-audio-prompt" onclick="document.getElementById('edit-file-audio').click()" class="py-2">
+                                <i data-lucide="upload-cloud" class="w-5 h-5 mx-auto text-slate-400 mb-1"></i>
+                                <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">選擇音訊</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i data-lucide="image" class="w-4 h-4 text-sakura-500"></i> 參考截圖</span>
+                            <span id="edit-image-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
+                        </label>
+                        <div id="edit-drop-zone-image" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
+                            <input type="file" id="edit-file-image" accept="image/*" onchange="handleEditImageUpload(event)" class="hidden">
+                            <div id="edit-image-preview-container" class="hidden space-y-2">
+                                <img id="edit-image-element" src="" class="max-h-20 mx-auto rounded-xl shadow-md border border-slate-200 dark:border-slate-700 object-cover">
+                                <button type="button" onclick="clearEditImage(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除
+                                </button>
+                            </div>
+                            <div id="edit-image-prompt" onclick="document.getElementById('edit-file-image').click()" class="py-2">
+                                <i data-lucide="camera" class="w-5 h-5 mx-auto text-slate-400 mb-1"></i>
+                                <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">選擇或貼上</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100">取消</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-sakura-500 hover:bg-sakura-600 text-white text-xs font-bold shadow-md">儲存卡片並同步</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BACKUP MODAL -->
+    <div id="backup-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 dark:border-slate-700">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-4">
+                <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <i data-lucide="hard-drive" class="w-5 h-5 text-sakura-500"></i> 生字庫數據備份與匯入
+                </h3>
+                <button onclick="closeBackupModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 space-y-2">
+                    <h4 class="font-bold text-xs uppercase text-slate-500">匯出完整 JSON 備份檔</h4>
+                    <p class="text-xs text-slate-500">導出包含所有音訊與截圖的完整數據檔案。</p>
+                    <button onclick="exportBackupJSON()" class="w-full py-2.5 bg-sakura-500 hover:bg-sakura-600 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2">
+                        <i data-lucide="download" class="w-4 h-4"></i> 下載 JSON 備份檔
+                    </button>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 space-y-2">
+                    <h4 class="font-bold text-xs uppercase text-slate-500">匯入舊有 JSON 備份</h4>
+                    <input type="file" id="input-import-json" accept=".json" onchange="importBackupJSON(event)" class="hidden">
+                    <button onclick="document.getElementById('input-import-json').click()" class="w-full py-2.5 bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-800 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2">
+                        <i data-lucide="upload" class="w-4 h-4"></i> 選擇 JSON 檔案匯入
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX IMAGE MODAL -->
+    <div id="image-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer" onclick="closeImageModal()">
+        <img id="lightbox-image" src="" class="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain">
+    </div>
+
+    <script>
+        /* ==========================================================================
+           GOOGLE DRIVE API & AUTO OAUTH SYNC CONFIG
+           ========================================================================== */
+        const CLIENT_ID = '263970342404-v3br9qeutdfr89jov50rd6uo4hi5gc69.apps.googleusercontent.com';
+        const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
+
+        let tokenClient;
+        let gapiInited = false;
+        let gsisInited = false;
+
+        function gapiLoaded() {
+            gapi.load('client', async () => {
+                await gapi.client.init({
+                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                });
+                gapiInited = true;
+                checkAutoSyncInit();
+            });
+        }
+
+        function gisLoaded() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: '',
+            });
+            gsisInited = true;
+            checkAutoSyncInit();
+        }
+
+        async function checkAutoSyncInit() {
+            if (!gapiInited || !gsisInited) return;
+
+            const savedToken = localStorage.getItem('gdrive_token');
+            if (savedToken) {
+                gapi.client.setToken({ access_token: savedToken });
+                updateSyncBtnUI(true);
+                await downloadAndMergeFromDriveAppData(true);
+            }
+        }
+
+        function updateSyncBtnUI(isSynced) {
+            const btnText = document.getElementById('sync-btn-text');
+            const logoutBtn = document.getElementById('logout-btn');
+            if (btnText) {
+                btnText.textContent = isSynced ? '已連線 Google Drive' : 'Google Drive 同步';
+            }
+            if (logoutBtn) {
+                if (isSynced) logoutBtn.classList.remove('hidden');
+                else logoutBtn.classList.add('hidden');
+            }
+        }
+
+        function logoutGoogleAccount() {
+            localStorage.removeItem('gdrive_token');
+            if (gapi.client) gapi.client.setToken(null);
+            updateSyncBtnUI(false);
+            alert('已成功登出 Google 帳號！');
+        }
+
+        async function syncToGoogleDrive() {
+            if (!gapiInited || !gsisInited) {
+                alert('Google API 仍在載入中，請稍候再試...');
+                return;
+            }
+
+            const savedToken = localStorage.getItem('gdrive_token');
+
+            if (savedToken) {
+                gapi.client.setToken({ access_token: savedToken });
+                updateSyncBtnUI(true);
+                
+                try {
+                    await downloadAndMergeFromDriveAppData(false);
+                    await uploadToDriveAppData(false);
+                    return;
+                } catch (err) {
+                    console.warn('Token 已失效，重新請求授權...', err);
+                    localStorage.removeItem('gdrive_token');
+                    updateSyncBtnUI(false);
+                }
+            }
+
+            tokenClient.callback = async (resp) => {
+                if (resp.error) {
+                    alert('Google 授權失敗！');
+                    return;
+                }
+                if (resp.access_token) {
+                    localStorage.setItem('gdrive_token', resp.access_token);
+                    gapi.client.setToken({ access_token: resp.access_token });
+                    updateSyncBtnUI(true);
+                }
+                await downloadAndMergeFromDriveAppData(false);
+                await uploadToDriveAppData(false);
+            };
+
+            tokenClient.requestAccessToken({ prompt: '' });
+        }
+
+        async function autoUploadToDriveAppData() {
+            const savedToken = localStorage.getItem('gdrive_token');
+            if (!savedToken || !gapiInited) return;
+
+            gapi.client.setToken({ access_token: savedToken });
+            await uploadToDriveAppData(true);
+        }
+
+        async function uploadToDriveAppData(isSilent = false) {
+            try {
+                const allData = await dbGetAll();
+                const fileContent = JSON.stringify(allData);
+                const file = new Blob([fileContent], { type: 'application/json' });
+
+                const response = await gapi.client.drive.files.list({
+                    q: "name='nihongo_mine_data.json' and 'appDataFolder' in parents",
+                    spaces: 'appDataFolder',
+                    fields: 'files(id, name)',
+                });
+
+                const existingFiles = response.result.files;
+                let fileId = existingFiles.length > 0 ? existingFiles[0].id : null;
+
+                const metadata = {
+                    name: 'nihongo_mine_data.json',
+                    mimeType: 'application/json',
+                    parents: fileId ? [] : ['appDataFolder'],
+                };
+
+                const currentTokenObj = gapi.client.getToken();
+                if (!currentTokenObj || !currentTokenObj.access_token) return;
+
+                const accessToken = currentTokenObj.access_token;
+                const form = new FormData();
+                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                form.append('file', file);
+
+                const url = fileId
+                    ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`
+                    : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+
+                const res = await fetch(url, {
+                    method: fileId ? 'PATCH' : 'POST',
+                    headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
+                    body: form,
+                });
+
+                if (res.status === 401) {
+                    localStorage.removeItem('gdrive_token');
+                    updateSyncBtnUI(false);
+                    return;
+                }
+
+                if (!isSilent) {
+                    alert('Google Drive 雙向同步成功！');
+                } else {
+                    console.log('背景自動同步成功！');
+                }
+            } catch (err) {
+                console.error('Upload to Drive error:', err);
+                throw err;
+            }
+        }
+
+        async function downloadAndMergeFromDriveAppData(isSilent = false) {
+            try {
+                const response = await gapi.client.drive.files.list({
+                    q: "name='nihongo_mine_data.json' and 'appDataFolder' in parents",
+                    spaces: 'appDataFolder',
+                    fields: 'files(id, name)',
+                });
+
+                const files = response.result.files;
+                if (files.length === 0) return;
+
+                const fileId = files[0].id;
+                const res = await gapi.client.drive.files.get({
+                    fileId: fileId,
+                    alt: 'media',
+                });
+
+                const remoteData = res.result;
+                if (Array.isArray(remoteData)) {
+                    const localData = await dbGetAll();
+                    const mergedMap = new Map();
+
+                    remoteData.forEach(item => mergedMap.set(item.id, item));
+                    localData.forEach(item => {
+                        if (!mergedMap.has(item.id)) {
+                            mergedMap.set(item.id, item);
+                        }
+                    });
+
+                    const mergedArray = Array.from(mergedMap.values());
+
+                    await dbClearAll();
+                    for (let item of mergedArray) {
+                        await dbSaveVocab(item);
+                    }
+                    await loadVocabs();
+                }
+            } catch (err) {
+                if (err.status === 401) {
+                    localStorage.removeItem('gdrive_token');
+                    updateSyncBtnUI(false);
+                } else {
+                    console.error('Download from Drive error:', err);
+                }
+                throw err;
+            }
+        }
+
+        /* ==========================================================================
+           TTS & AUDIO PLAYBACK ENGINE (Priority: User Uploaded Audio -> TTS at rate 1.0)
+           ========================================================================== */
+        function isAppleMobile() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent)
+                || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        }
+
+        function speakJapanese(text) {
+            if (!text || !('speechSynthesis' in window)) return;
+
+            const synth = window.speechSynthesis;
+            const appleMobile = isAppleMobile();
+
+            const speakNow = () => {
+                synth.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'ja-JP';
+                u.rate = 1.0;
+
+                if (!appleMobile) {
+                    const voices = synth.getVoices();
+                    const preferredVoice = voices.find(v =>
+                        (v.lang === 'ja-JP' || v.lang === 'ja') &&
+                        (v.name.includes('Nanami') || v.name.includes('Keita') || v.name.includes('Natural'))
+                    ) || voices.find(v => v.lang === 'ja-JP' || v.lang === 'ja');
+
+                    if (preferredVoice) {
+                        u.voice = preferredVoice;
+                    }
+                }
+
+                synth.speak(u);
+            };
+
+            if (!appleMobile && synth.getVoices().length === 0) {
+                let done = false;
+                const once = () => {
+                    if (done) return;
+                    done = true;
+                    speakNow();
+                };
+                const previous = synth.onvoiceschanged;
+                synth.onvoiceschanged = () => {
+                    if (typeof previous === 'function') previous();
+                    once();
+                };
+                synth.getVoices();
+                setTimeout(once, 350);
+                return;
+            }
+
+            speakNow();
+        }
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                window.speechSynthesis.getVoices();
+            };
+            window.speechSynthesis.getVoices();
+        }
+
+        function playWordAudio(id) {
+            const v = state.vocabs.find(x => x.id === id);
+            if (v && v.wordAudio) {
+                const audio = new Audio(v.wordAudio);
+                audio.play();
+            } else if (v) {
+                speakJapanese(v.word);
+            }
+        }
+
+        function playSentenceAudio(id) {
+            const v = state.vocabs.find(x => x.id === id);
+            if (v && v.audio) {
+                const audio = new Audio(v.audio);
+                audio.play();
+            } else if (v && v.sentence) {
+                speakJapanese(v.sentence);
+            }
+        }
+
+        /* ==========================================================================
+           AUTO-GENERATED READING (HIRAGANA) ON INPUT
+           ========================================================================== */
+        let readingTimer = null;
+        function handleWordInput(val) {
+            const word = val.trim();
+            if (!word) return;
+            clearTimeout(readingTimer);
+            readingTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(word)}`);
+                    const json = await res.json();
+                    if (json.data && json.data.length > 0) {
+                        const jp = json.data[0].japanese;
+                        if (jp && jp[0] && jp[0].reading) {
+                            document.getElementById('input-reading').value = jp[0].reading;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Auto reading fetch failed', e);
+                }
+            }, 400);
+        }
+
+        let editReadingTimer = null;
+        function handleEditWordInput(val) {
+            const word = val.trim();
+            if (!word) return;
+            clearTimeout(editReadingTimer);
+            editReadingTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(word)}`);
+                    const json = await res.json();
+                    if (json.data && json.data.length > 0) {
+                        const jp = json.data[0].japanese;
+                        if (jp && jp[0] && jp[0].reading) {
+                            document.getElementById('edit-reading').value = jp[0].reading;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Auto edit reading fetch failed', e);
+                }
+            }, 400);
+        }
+
+        function toggleVerbTypeVisibility(posSelectId, containerId) {
+            const pos = document.getElementById(posSelectId).value;
+            const container = document.getElementById(containerId);
+            if (pos === '動詞') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        /* ==========================================================================
+           INDEXEDDB PERSISTENCE LAYER
+           ========================================================================== */
+        const DB_NAME = 'NihongoMineLocalDB';
+        const DB_VERSION = 1;
+        let db = null;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const database = e.target.result;
+                    if (!database.objectStoreNames.contains('vocabs')) {
+                        database.createObjectStore('vocabs', { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve(db);
+                };
+                request.onerror = (e) => reject(e);
+            });
+        }
+
+        function dbSaveVocab(vocab) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('vocabs', 'readwrite');
+                const store = tx.objectStore('vocabs');
+                store.put(vocab);
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e);
+            });
+        }
+
+        function dbGetAll() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('vocabs', 'readonly');
+                const store = tx.objectStore('vocabs');
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = (e) => reject(e);
+            });
+        }
+
+        function dbDelete(id) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('vocabs', 'readwrite');
+                const store = tx.objectStore('vocabs');
+                store.delete(id);
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e);
+            });
+        }
+
+        function dbClearAll() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('vocabs', 'readwrite');
+                const store = tx.objectStore('vocabs');
+                const req = store.clear();
+                req.onsuccess = () => resolve();
+                req.onerror = (e) => reject(e);
+            });
+        }
+
+        /* ==========================================================================
+           APPLICATION STATE & HANDLERS
+           ========================================================================== */
+        let state = {
+            vocabs: [],
+            currentTab: 'add',
+            galleryViewMode: 'grid',
+            currentWordAudio: null,
+            currentAudio: null,
+            currentImage: null,
+            editWordAudio: null,
+            editAudio: null,
+            editImage: null,
+            fcIndex: 0,
+            fcPageStep: 1,
+            fcMode: 'chinese_front',
+            fcDeck: []
+        };
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            await initDB();
+            await loadVocabs();
+            setupDropAndPasteHandlers();
+
+            document.addEventListener('keydown', (e) => {
+                if (state.currentTab === 'cards') {
+                    if (e.key === 'ArrowRight') nextFlashcard();
+                    if (e.key === 'ArrowLeft') prevFlashcard();
+                    if (e.key === ' ') {
+                        e.preventDefault();
+                        flipFlashcard();
+                    }
+                }
+            });
+        });
+
+        async function loadVocabs() {
+            const list = await dbGetAll();
+            state.vocabs = list.sort((a, b) => b.createdAt - a.createdAt);
+            document.getElementById('total-count-nav').textContent = state.vocabs.length;
+            renderGallery();
+        }
+
+        function setupDropAndPasteHandlers() {
+            document.addEventListener('paste', (e) => {
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                for (let item of items) {
+                    if (item.type.indexOf('image') !== -1) {
+                        const blob = item.getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            if (state.currentTab === 'add') {
+                                state.currentImage = event.target.result;
+                                document.getElementById('image-element').src = state.currentImage;
+                                document.getElementById('image-prompt').classList.add('hidden');
+                                document.getElementById('image-preview-container').classList.remove('hidden');
+                                document.getElementById('image-filename').textContent = '剪貼簿貼上圖片';
+                            } else if (!document.getElementById('edit-modal').classList.contains('hidden')) {
+                                state.editImage = event.target.result;
+                                document.getElementById('edit-image-element').src = state.editImage;
+                                document.getElementById('edit-image-prompt').classList.add('hidden');
+                                document.getElementById('edit-image-preview-container').classList.remove('hidden');
+                                document.getElementById('edit-image-filename').textContent = '剪貼簿貼上圖片';
+                            }
+                        };
+                        reader.readAsDataURL(blob);
+                    }
+                }
+            });
+
+            // Image drop zone handling
+            const imageZone = document.getElementById('drop-zone-image');
+            if (imageZone) {
+                imageZone.addEventListener('dragover', (e) => { e.preventDefault(); imageZone.classList.add('border-sakura-500'); });
+                imageZone.addEventListener('dragleave', () => imageZone.classList.remove('border-sakura-500'));
+                imageZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    imageZone.classList.remove('border-sakura-500');
+                    const files = e.dataTransfer.files;
+                    if (files.length && files[0].type.startsWith('image/')) processImageFile(files[0]);
+                });
+            }
+
+            const editImageZone = document.getElementById('edit-drop-zone-image');
+            if (editImageZone) {
+                editImageZone.addEventListener('dragover', (e) => { e.preventDefault(); editImageZone.classList.add('border-sakura-500'); });
+                editImageZone.addEventListener('dragleave', () => editImageZone.classList.remove('border-sakura-500'));
+                editImageZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    editImageZone.classList.remove('border-sakura-500');
+                    const files = e.dataTransfer.files;
+                    if (files.length && files[0].type.startsWith('image/')) processEditImageFile(files[0]);
+                });
+            }
+        }
+
+        function processWordAudioFile(file) {
+            const r = new FileReader();
+            r.onload = (ev) => {
+                state.currentWordAudio = ev.target.result;
+                document.getElementById('word-audio-element').src = state.currentWordAudio;
+                document.getElementById('word-audio-prompt').classList.add('hidden');
+                document.getElementById('word-audio-preview-container').classList.remove('hidden');
+                document.getElementById('word-audio-filename').textContent = file.name;
+            };
+            r.readAsDataURL(file);
+        }
+
+        function handleWordAudioUpload(e) {
+            const file = e.target.files[0];
+            if (file) processWordAudioFile(file);
+        }
+
+        function clearWordAudio(e) {
+            if (e) e.stopPropagation();
+            state.currentWordAudio = null;
+            document.getElementById('file-word-audio').value = '';
+            document.getElementById('word-audio-prompt').classList.remove('hidden');
+            document.getElementById('word-audio-preview-container').classList.add('hidden');
+            document.getElementById('word-audio-filename').textContent = '選填';
+        }
+
+        function processAudioFile(file) {
+            const r = new FileReader();
+            r.onload = (ev) => {
+                state.currentAudio = ev.target.result;
+                document.getElementById('audio-element').src = state.currentAudio;
+                document.getElementById('audio-prompt').classList.add('hidden');
+                document.getElementById('audio-preview-container').classList.remove('hidden');
+                document.getElementById('audio-filename').textContent = file.name;
+            };
+            r.readAsDataURL(file);
+        }
+
+        function handleAudioUpload(e) {
+            const file = e.target.files[0];
+            if (file) processAudioFile(file);
+        }
+
+        function clearAudio(e) {
+            if (e) e.stopPropagation();
+            state.currentAudio = null;
+            document.getElementById('file-audio').value = '';
+            document.getElementById('audio-prompt').classList.remove('hidden');
+            document.getElementById('audio-preview-container').classList.add('hidden');
+            document.getElementById('audio-filename').textContent = '選填';
+        }
+
+        function processImageFile(file) {
+            const r = new FileReader();
+            r.onload = (ev) => {
+                state.currentImage = ev.target.result;
+                document.getElementById('image-element').src = state.currentImage;
+                document.getElementById('image-prompt').classList.add('hidden');
+                document.getElementById('image-preview-container').classList.remove('hidden');
+                document.getElementById('image-filename').textContent = file.name;
+            };
+            r.readAsDataURL(file);
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) processImageFile(file);
+        }
+
+        function clearImage(e) {
+            if (e) e.stopPropagation();
+            state.currentImage = null;
+            document.getElementById('file-image').value = '';
+            document.getElementById('image-prompt').classList.remove('hidden');
+            document.getElementById('image-preview-container').classList.add('hidden');
+            document.getElementById('image-filename').textContent = '選填';
+        }
+
+        function processEditWordAudioFile(file) {
+            const r = new FileReader();
+            r.onload = (ev) => {
+                state.editWordAudio = ev.target.result;
+                document.getElementById('edit-word-audio-element').src = state.editWordAudio;
+                document.getElementById('edit-word-audio-prompt').classList.add('hidden');
+                document.getElementById('edit-word-audio-preview-container').classList.remove('hidden');
+                document.getElementById('edit-word-audio-filename').textContent = file.name;
+            };
+            r.readAsDataURL(file);
+        }
+
+        function handleEditWordAudioUpload(e) {
+            const file = e.target.files[0];
+            if (file) processEditWordAudioFile(file);
+        }
+
+        function clearEditWordAudio(e) {
+            if (e) e.stopPropagation();
+            state.editWordAudio = null;
+            document.getElementById('edit-file-word-audio').value = '';
+            document.getElementById('edit-word-audio-prompt').classList.remove('hidden');
+            document.getElementById('edit-word-audio-preview-container').classList.add('hidden');
+            document.getElementById('edit-word-audio-filename').textContent = '選填';
+        }
+
+        function processEditAudioFile(file) {
+            const r = new FileReader();
+            r.onload = (ev) => {
+                state.editAudio = ev.target.result;
+                document.getElementById('edit-audio-element').src = state.editAudio;
+                document.getElementById('edit-audio-prompt').classList.add('hidden');
+                document.getElementById('edit-audio-preview-container').classList.remove('hidden');
+                document.getElementById('edit-audio-filename').textContent = file.name;
+            };
+            r.readAsDataURL(file);
+        }
+
+        function handleEditAudioUpload(e) {
+            const file = e.target.files[0];
+            if (file) processEditAudioFile(file);
+        }
+
+        function clearEditAudio(e) {
+            if (e) e.stopPropagation();
+            state.editAudio = null;
+            document.getElementById('edit-file-audio').value = '';
+            document.getElementById('edit-audio-prompt').classList.remove('hidden');
+            document.getElementById('edit-audio-preview-container').classList.add('hidden');
+            document.getElementById('edit-audio-filename').textContent = '選填';
+        }
+
+        function processEditImageFile(file) {
+            const r = new FileReader();
+            r.onload = (ev) => {
+                state.editImage = ev.target.result;
+                document.getElementById('edit-image-element').src = state.editImage;
+                document.getElementById('edit-image-prompt').classList.add('hidden');
+                document.getElementById('edit-image-preview-container').classList.remove('hidden');
+                document.getElementById('edit-image-filename').textContent = file.name;
+            };
+            r.readAsDataURL(file);
+        }
+
+        function handleEditImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) processEditImageFile(file);
+        }
+
+        function clearEditImage(e) {
+            if (e) e.stopPropagation();
+            state.editImage = null;
+            document.getElementById('edit-file-image').value = '';
+            document.getElementById('edit-image-prompt').classList.remove('hidden');
+            document.getElementById('edit-image-preview-container').classList.add('hidden');
+            document.getElementById('edit-image-filename').textContent = '選填';
+        }
+
+        function clearForm() {
+            document.getElementById('vocab-form').reset();
+            document.getElementById('verb-type-container').classList.add('hidden');
+            clearWordAudio();
+            clearAudio();
+            clearImage();
+        }
+
+        async function handleVocabSubmit(event) {
+            event.preventDefault();
+
+            const word = document.getElementById('input-word').value.trim();
+            const reading = document.getElementById('input-reading').value.trim();
+            const pos = document.getElementById('input-pos').value;
+            const verbType = pos === '動詞' ? document.getElementById('input-verb-type').value : '';
+            const definition = document.getElementById('input-definition').value.trim();
+            const sentence = document.getElementById('input-sentence').value.trim();
+            const sentenceTr = document.getElementById('input-sentence-tr').value.trim();
+
+            const entry = {
+                id: 'vocab_' + Date.now(),
+                word,
+                reading,
+                pos,
+                verbType,
+                definition,
+                sentence,
+                sentenceTr,
+                wordAudio: state.currentWordAudio,
+                audio: state.currentAudio,
+                image: state.currentImage,
+                createdAt: Date.now()
+            };
+
+            await dbSaveVocab(entry);
+            await loadVocabs();
+            clearForm();
+
+            if (typeof confetti === 'function') confetti({ particleCount: 35, spread: 50 });
+            autoUploadToDriveAppData();
+            switchTab('gallery');
+        }
+
+        function switchTab(tabId) {
+            state.currentTab = tabId;
+            document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(`view-${tabId}`)?.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'dark:bg-slate-700', 'text-sakura-600', 'shadow-sm');
+                btn.classList.add('text-slate-600', 'dark:text-slate-300');
+            });
+            document.getElementById(`nav-${tabId}`)?.classList.add('bg-white', 'dark:bg-slate-700', 'text-sakura-600', 'shadow-sm');
+
+            if (tabId === 'cards') setupFlashcards();
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        function setGalleryViewMode(mode) {
+            state.galleryViewMode = mode;
+            const gridBtn = document.getElementById('view-mode-grid');
+            const listBtn = document.getElementById('view-mode-list');
+            if (mode === 'grid') {
+                gridBtn.className = 'p-2 rounded-xl text-sakura-600 bg-white dark:bg-slate-800 shadow-sm transition-all';
+                listBtn.className = 'p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 transition-all';
+            } else {
+                listBtn.className = 'p-2 rounded-xl text-sakura-600 bg-white dark:bg-slate-800 shadow-sm transition-all';
+                gridBtn.className = 'p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 transition-all';
+            }
+            renderGallery();
+        }
+
+        function renderGallery() {
+            const query = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+            const filterDate = document.getElementById('filter-date')?.value;
+            const filterPos = document.getElementById('filter-pos')?.value;
+            const filterVerbType = document.getElementById('filter-verb-type')?.value;
+
+            let filtered = state.vocabs.filter(v => {
+                if (filterPos && v.pos !== filterPos) return false;
+                if (filterVerbType && v.verbType !== filterVerbType) return false;
+                if (filterDate) {
+                    const itemDate = new Date(v.createdAt).toISOString().slice(0, 10);
+                    if (itemDate !== filterDate) return false;
+                }
+                if (query) {
+                    return v.word.toLowerCase().includes(query) ||
+                           (v.reading || '').toLowerCase().includes(query) ||
+                           (v.pos || '').toLowerCase().includes(query) ||
+                           v.definition.toLowerCase().includes(query) ||
+                           (v.sentence || '').toLowerCase().includes(query) ||
+                           (v.sentenceTr || '').toLowerCase().includes(query);
+                }
+                return true;
+            });
+
+            document.getElementById('gallery-count').textContent = filtered.length;
+            const container = document.getElementById('gallery-container');
+            const empty = document.getElementById('gallery-empty');
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+
+            if (state.galleryViewMode === 'grid') {
+                container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5";
+                container.innerHTML = filtered.map(v => `
+                    <div class="group bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col justify-between space-y-3 relative">
+                        <div class="absolute top-3.5 right-3.5 flex items-center gap-1.5 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-md" title="編輯">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-md" title="刪除">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+
+                        <div>
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <ruby class="text-3xl font-black text-slate-800 dark:text-slate-100 font-jp">
+                                            ${v.word}
+                                            ${v.reading ? `<rt class="text-xs text-sakura-500 font-normal">${v.reading}</rt>` : ''}
+                                        </ruby>
+                                        <button type="button" onclick="playWordAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
+                                            <i data-lucide="volume-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    ${v.pos ? `
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-sakura-50 dark:bg-sakura-900/40 text-sakura-600 dark:text-sakura-400 border border-sakura-100 dark:border-sakura-800">${v.pos}</span>${v.verbType ? `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${v.verbType}</span>` : ''}
+                                        </div>
+                                    ` : ''}
+
+                                    <p class="text-sm font-bold text-slate-700 dark:text-slate-200 pt-1">${v.definition}</p>
+                                </div>
+
+                                ${v.image ? `
+                                    <img src="${v.image}" onclick="openImageModal('${v.image}')" class="w-36 sm:w-40 h-24 sm:h-28 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform shadow-md shrink-0 ml-auto -mr-1" title="點擊放大圖片">
+                                ` : ''}
+                            </div>
+
+                            ${v.sentence ? `
+                                <div class="mt-3 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50 flex items-center justify-between gap-2">
+                                    <div class="space-y-1 w-full">
+                                        <p class="text-xs text-slate-700 dark:text-slate-300 font-jp block leading-relaxed">${v.sentence}</p>${v.sentenceTr ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${v.sentenceTr}</p>` : ''}
+                                    </div>
+                                    <button type="button" onclick="playSentenceAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
+                                        <i data-lucide="music" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="pt-2 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-end">
+                            <span class="text-[10px] text-slate-400">${new Date(v.createdAt).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.className = "space-y-3";
+                container.innerHTML = filtered.map(v => `
+                    <div class="group bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
+                        <div class="absolute top-2.5 right-3 flex items-center gap-1.5 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-md" title="編輯">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-md" title="刪除">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex items-start sm:items-center gap-3 pr-16 flex-grow">
+                            <div class="space-y-1 w-full">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-lg font-black text-slate-800 dark:text-slate-100 font-jp">${v.word}</span>
+                                    <button type="button" onclick="playWordAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
+                                        <i data-lucide="volume-2" class="w-4 h-4"></i>
+                                    </button>
+                                    ${v.reading ? `<span class="text-xs text-sakura-500 font-jp">${v.reading}</span>` : ''}
+                                    ${v.pos ? `<span class="px-2 py-0.5 text-[9px] font-bold rounded bg-sakura-50 text-sakura-600 dark:bg-sakura-900/40 dark:text-sakura-400">[${v.pos}${v.verbType ? ` · ${v.verbType}` : ''}]</span>` : ''}
+                                </div>
+                                <p class="text-xs font-bold text-slate-600 dark:text-slate-300">${v.definition}</p>
+
+                                ${v.sentence ? `
+                                    <div class="mt-2 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/50 flex items-center justify-between gap-2">
+                                        <div class="space-y-1 w-full">
+                                            <p class="text-xs text-slate-700 dark:text-slate-300 font-jp block leading-relaxed">${v.sentence}</p>${v.sentenceTr ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${v.sentenceTr}</p>` : ''}
+                                        </div>
+                                        <button type="button" onclick="playSentenceAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
+                                            <i data-lucide="music" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        ${v.image ? `
+                            <div class="shrink-0 flex items-center justify-end">
+                                <img src="${v.image}" onclick="openImageModal('${v.image}')" class="w-44 h-28 rounded-xl object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform shadow-md" title="點擊放大圖片">
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            }
+
+            lucide.createIcons();
+        }
+
+        /* EDIT MODAL FUNCTIONS */
+        function openEditModal(id) {
+            const v = state.vocabs.find(x => x.id === id);
+            if (!v) return;
+
+            document.getElementById('edit-id').value = v.id;
+            document.getElementById('edit-word').value = v.word;
+            document.getElementById('edit-reading').value = v.reading || '';
+            document.getElementById('edit-pos').value = v.pos || '';
+            document.getElementById('edit-verb-type').value = v.verbType || '';
+            document.getElementById('edit-definition').value = v.definition;
+            document.getElementById('edit-sentence').value = v.sentence || '';
+            document.getElementById('edit-sentence-tr').value = v.sentenceTr || '';
+
+            toggleVerbTypeVisibility('edit-pos', 'edit-verb-type-container');
+
+            if (v.wordAudio) {
+                state.editWordAudio = v.wordAudio;
+                document.getElementById('edit-word-audio-element').src = v.wordAudio;
+                document.getElementById('edit-word-audio-prompt').classList.add('hidden');
+                document.getElementById('edit-word-audio-preview-container').classList.remove('hidden');
+                document.getElementById('edit-word-audio-filename').textContent = '已保存音訊';
+            } else {
+                clearEditWordAudio();
+            }
+
+            if (v.audio) {
+                state.editAudio = v.audio;
+                document.getElementById('edit-audio-element').src = v.audio;
+                document.getElementById('edit-audio-prompt').classList.add('hidden');
+                document.getElementById('edit-audio-preview-container').classList.remove('hidden');
+                document.getElementById('edit-audio-filename').textContent = '已保存音訊';
+            } else {
+                clearEditAudio();
+            }
+
+            if (v.image) {
+                state.editImage = v.image;
+                document.getElementById('edit-image-element').src = v.image;
+                document.getElementById('edit-image-prompt').classList.add('hidden');
+                document.getElementById('edit-image-preview-container').classList.remove('hidden');
+                document.getElementById('edit-image-filename').textContent = '已保存截圖';
+            } else {
+                clearEditImage();
+            }
+
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        async function handleEditSubmit(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('edit-id').value;
+            const target = state.vocabs.find(x => x.id === id);
+            if (!target) return;
+
+            const pos = document.getElementById('edit-pos').value;
+            const verbType = pos === '動詞' ? document.getElementById('edit-verb-type').value : '';
+
+            const updatedEntry = {
+                ...target,
+                word: document.getElementById('edit-word').value.trim(),
+                reading: document.getElementById('edit-reading').value.trim(),
+                pos,
+                verbType,
+                definition: document.getElementById('edit-definition').value.trim(),
+                sentence: document.getElementById('edit-sentence').value.trim(),
+                sentenceTr: document.getElementById('edit-sentence-tr').value.trim(),
+                wordAudio: state.editWordAudio,
+                audio: state.editAudio,
+                image: state.editImage,
+            };
+
+            await dbSaveVocab(updatedEntry);
+            await loadVocabs();
+            closeEditModal();
+            autoUploadToDriveAppData();
+        }
+
+        async function deleteEntry(id) {
+            if (confirm('確定要刪除這張採集卡片嗎？')) {
+                await dbDelete(id);
+                await loadVocabs();
+                autoUploadToDriveAppData();
+            }
+        }
+
+        function openImageModal(src) {
+            document.getElementById('lightbox-image').src = src;
+            document.getElementById('image-modal').classList.remove('hidden');
+        }
+
+        function closeImageModal() {
+            document.getElementById('image-modal').classList.add('hidden');
+        }
+
+        /* ==========================================================================
+           FLASHCARDS & HANDWRITING CANVAS LOGIC
+           ========================================================================== */
+        let cardCanvasCtx = null;
+        let popupCanvasCtx = null;
+        let isCardDrawing = false;
+        let isPopupDrawing = false;
+
+        function changeFcMode() {
+            state.fcMode = document.getElementById('fc-mode-select').value;
+            state.fcPageStep = 1;
+            updateFlashcard();
+        }
+
+        function setupFlashcards() {
+            const fcDate = document.getElementById('fc-filter-date')?.value;
+            const fcPos = document.getElementById('fc-filter-pos')?.value;
+            const fcVerbType = document.getElementById('fc-filter-verb-type')?.value;
+
+            state.fcDeck = state.vocabs.filter(v => {
+                if (fcDate) {
+                    const itemDate = new Date(v.createdAt).toISOString().slice(0, 10);
+                    if (itemDate !== fcDate) return false;
+                }
+                if (fcPos && v.pos !== fcPos) return false;
+                if (fcVerbType && v.verbType !== fcVerbType) return false;
+                return true;
+            });
+
+            state.fcIndex = 0;
+            state.fcPageStep = 1;
+            updateFlashcard();
+        }
+
+        function shuffleDeck() {
+            state.fcDeck.sort(() => Math.random() - 0.5);
+            state.fcIndex = 0;
+            state.fcPageStep = 1;
+            updateFlashcard();
+        }
+
+        function flipFlashcard() {
+            if (state.fcMode === 'chinese_front') {
+                state.fcPageStep = (state.fcPageStep % 3) + 1;
+            } else {
+                state.fcPageStep = state.fcPageStep === 1 ? 2 : 1;
+            }
+            updateFlashcard();
+        }
+
+        function initCardCanvas() {
+            const canvas = document.getElementById('hw-card-canvas');
+            if (!canvas) return;
+
+            cardCanvasCtx = canvas.getContext('2d');
+            cardCanvasCtx.strokeStyle = '#e83e6b';
+            cardCanvasCtx.lineWidth = 4;
+            cardCanvasCtx.lineCap = 'round';
+
+            const startDraw = (e) => {
+                isCardDrawing = true;
+                cardCanvasCtx.beginPath();
+                const pos = getCanvasPos(e, canvas);
+                cardCanvasCtx.moveTo(pos.x, pos.y);
+            };
+
+            const draw = (e) => {
+                if (!isCardDrawing) return;
+                const pos = getCanvasPos(e, canvas);
+                cardCanvasCtx.lineTo(pos.x, pos.y);
+                cardCanvasCtx.stroke();
+            };
+
+            const stopDraw = () => { isCardDrawing = false; };
+
+            canvas.onmousedown = startDraw;
+            canvas.onmousemove = draw;
+            canvas.onmouseup = stopDraw;
+
+            canvas.ontouchstart = (e) => { e.preventDefault(); startDraw(e.touches[0]); };
+            canvas.ontouchmove = (e) => { e.preventDefault(); draw(e.touches[0]); };
+            canvas.ontouchend = stopDraw;
+        }
+
+        function clearCardCanvas(e) {
+            if (e) e.stopPropagation();
+            const canvas = document.getElementById('hw-card-canvas');
+            if (canvas && cardCanvasCtx) {
+                cardCanvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function openCanvasModal(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('modal-canvas').classList.remove('hidden');
+            setTimeout(initPopupCanvas, 50);
+        }
+
+        function closeCanvasModal() {
+            document.getElementById('modal-canvas').classList.add('hidden');
+        }
+
+        function completePopupCanvas() {
+            const popupCanvas = document.getElementById('popup-hw-canvas');
+            const cardCanvas = document.getElementById('hw-card-canvas');
+            if (popupCanvas && cardCanvas && cardCanvasCtx) {
+                cardCanvasCtx.clearRect(0, 0, cardCanvas.width, cardCanvas.height);
+                cardCanvasCtx.drawImage(popupCanvas, 0, 0, cardCanvas.width, cardCanvas.height);
+            }
+            closeCanvasModal();
+        }
+
+        function initPopupCanvas() {
+            const canvas = document.getElementById('popup-hw-canvas');
+            if (!canvas) return;
+
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+
+            popupCanvasCtx = canvas.getContext('2d');
+            popupCanvasCtx.strokeStyle = '#e83e6b';
+            popupCanvasCtx.lineWidth = 5;
+            popupCanvasCtx.lineCap = 'round';
+
+            const startDraw = (e) => {
+                isPopupDrawing = true;
+                popupCanvasCtx.beginPath();
+                const pos = getCanvasPos(e, canvas);
+                popupCanvasCtx.moveTo(pos.x, pos.y);
+            };
+
+            const draw = (e) => {
+                if (!isPopupDrawing) return;
+                const pos = getCanvasPos(e, canvas);
+                popupCanvasCtx.lineTo(pos.x, pos.y);
+                popupCanvasCtx.stroke();
+            };
+
+            const stopDraw = () => { isPopupDrawing = false; };
+
+            canvas.onmousedown = startDraw;
+            canvas.onmousemove = draw;
+            canvas.onmouseup = stopDraw;
+
+            canvas.ontouchstart = (e) => { e.preventDefault(); startDraw(e.touches[0]); };
+            canvas.ontouchmove = (e) => { e.preventDefault(); draw(e.touches[0]); };
+            canvas.ontouchend = stopDraw;
+        }
+
+        function clearPopupCanvas() {
+            const canvas = document.getElementById('popup-hw-canvas');
+            if (canvas && popupCanvasCtx) {
+                popupCanvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function getCanvasPos(evt, canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const clientX = evt.clientX !== undefined ? evt.clientX : (evt.touches && evt.touches[0] ? evt.touches[0].clientX : 0);
+            const clientY = evt.clientY !== undefined ? evt.clientY : (evt.touches && evt.touches[0] ? evt.touches[0].clientY : 0);
+
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function renderFullBackContent(cur) {
+            return `
+                <div class="space-y-2.5 w-full max-w-md mx-auto text-center flex flex-col items-center justify-center">
+                    <div class="flex items-center justify-center gap-2">
+                        <ruby class="text-3xl sm:text-4xl font-black text-slate-800 dark:text-slate-100 font-jp text-center">
+                            ${cur.word} <rt class="text-xs text-sakura-500 font-medium">${cur.reading || ''}</rt>
+                        </ruby>
+                        <button type="button" onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
+                            <i data-lucide="volume-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    
+                    ${cur.pos ? `
+                        <div class="text-center">
+                            <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-lg bg-sakura-50 text-sakura-600 border border-sakura-100 dark:bg-sakura-900/40 dark:text-sakura-400">
+                                ${cur.pos}${cur.verbType ? ` (${cur.verbType})` : ''}
+                            </span>
+                        </div>
+                    ` : ''}
+
+                    <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-slate-100 leading-snug text-center">${cur.definition}</h3>
+
+                    ${cur.sentence ? `
+                        <div class="w-full bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-700/50 space-y-1 flex items-center justify-between gap-2">
+                            <div class="space-y-1 w-full text-left">
+                                <p class="text-xs text-slate-700 dark:text-slate-300 font-jp block leading-relaxed">${cur.sentence}</p>${cur.sentenceTr ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${cur.sentenceTr}</p>` : ''}
+                            </div>
+                            <button type="button" onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
+                                <i data-lucide="music" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    ` : ''}
+
+                    ${cur.image ? `<img src="${cur.image}" onclick="event.stopPropagation(); openImageModal('${cur.image}')" class="max-h-24 sm:max-h-28 rounded-xl border border-slate-200 dark:border-slate-700 mx-auto shadow-md object-cover cursor-pointer hover:scale-105 transition-transform">` : ''}
+                </div>
+            `;
+        }
+
+        function updateFlashcard() {
+            const cardBody = document.getElementById('fc-card-content');
+            const cardLabel = document.getElementById('fc-card-label');
+            const topRightActions = document.getElementById('fc-top-right-actions');
+            const clickHint = document.getElementById('fc-click-hint');
+
+            if (state.fcDeck.length === 0) {
+                document.getElementById('fc-status').textContent = `進度: 0 / 0`;
+                cardBody.innerHTML = `<h3 class="text-xl font-bold text-slate-400">目前未有選取的卡片</h3>`;
+                topRightActions.innerHTML = '';
+                return;
+            }
+
+            const cur = state.fcDeck[state.fcIndex];
+            document.getElementById('fc-status').textContent = `進度: ${state.fcIndex + 1} / ${state.fcDeck.length}`;
+            document.getElementById('fc-progress').style.width = `${((state.fcIndex + 1) / state.fcDeck.length) * 100}%`;
+
+            topRightActions.innerHTML = '';
+
+            if (state.fcMode === 'standard') {
+                if (state.fcPageStep === 1) {
+                    cardLabel.textContent = "正面：日文單詞與例句";
+                    clickHint.textContent = "點擊卡片翻看背面釋義";
+                    cardBody.innerHTML = `
+                        <div class="text-center w-full space-y-3">
+                            <div class="flex items-center justify-center gap-2">
+                                <ruby class="text-4xl sm:text-5xl font-black text-slate-800 dark:text-slate-100 font-jp tracking-wide">
+                                    ${cur.word} <rt class="text-base text-sakura-500 font-medium">${cur.reading || ''}</rt>
+                                </ruby>
+                                <button type="button" onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="p-2 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
+                                    <i data-lucide="volume-2" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                            ${cur.sentence ? `
+                                <div class="flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-2xl max-w-md mx-auto">
+                                    <p class="text-xs font-jp text-slate-600 dark:text-slate-300 text-left">${cur.sentence}</p>
+                                    <button type="button" onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
+                                        <i data-lucide="music" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                } else {
+                    cardLabel.textContent = "背面：釋義與詳細資訊";
+                    clickHint.textContent = "點擊卡片返回正面";
+                    cardBody.innerHTML = renderFullBackContent(cur);
+                }
+            } else if (state.fcMode === 'chinese_front') {
+                if (state.fcPageStep === 1) {
+                    cardLabel.textContent = "第一頁：中文釋義";
+                    clickHint.textContent = "點擊進入【第二頁：手寫練習板】";
+                    cardBody.innerHTML = `
+                        <h3 class="text-3xl sm:text-4xl font-extrabold text-slate-800 dark:text-slate-100 text-center">${cur.definition}</h3>
+                    `;
+                } else if (state.fcPageStep === 2) {
+                    cardLabel.textContent = "第二頁：手寫畫板";
+                    clickHint.textContent = "點擊進入【第三頁：對答案與詳細資訊】";
+                    cardBody.innerHTML = `
+                        <div class="space-y-2 w-full flex flex-col items-center justify-center" onclick="event.stopPropagation()">
+                            <canvas id="hw-card-canvas" width="460" height="230" class="w-full max-w-lg border-2 border-dashed border-sakura-300 dark:border-slate-600 rounded-2xl bg-slate-50 dark:bg-slate-900 touch-none cursor-crosshair shadow-inner"></canvas>
+                            
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="clearCardCanvas(event)" class="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-xs text-rose-500 font-bold hover:bg-slate-200 transition-colors">
+                                    清除畫板
+                                </button>
+                                <button type="button" onclick="openCanvasModal(event)" class="px-3.5 py-1.5 rounded-xl bg-sakura-500 text-xs text-white font-bold hover:bg-sakura-600 transition-colors flex items-center gap-1 shadow-sm">
+                                    <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> 放大全螢幕手寫
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    setTimeout(initCardCanvas, 50);
+                } else {
+                    cardLabel.textContent = "第三頁：完整解答與欄位資訊";
+                    clickHint.textContent = "點擊重頭開始 (返回第一頁)";
+                    cardBody.innerHTML = renderFullBackContent(cur);
+                }
+            } else if (state.fcMode === 'audio_only') {
+                if (state.fcPageStep === 1) {
+                    cardLabel.textContent = "正面：聽力訓練";
+                    clickHint.textContent = "點擊卡片翻看背面解答";
+                    cardBody.innerHTML = `
+                        <div class="space-y-4 text-center">
+                            <button type="button" onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="px-6 py-3 rounded-2xl bg-sakura-500 hover:bg-sakura-600 text-white font-bold text-sm shadow-lg flex items-center gap-2 mx-auto">
+                                <i data-lucide="volume-2" class="w-5 h-5"></i> 播放日文單詞音訊
+                            </button>
+                            ${cur.sentence ? `
+                                <button type="button" onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 font-bold text-xs flex items-center gap-2 mx-auto">
+                                    <i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 播放例句音訊
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                } else {
+                    cardLabel.textContent = "背面：完整解答與欄位資訊";
+                    clickHint.textContent = "點擊卡片返回正面";
+                    cardBody.innerHTML = renderFullBackContent(cur);
+                }
+            }
+
+            lucide.createIcons();
+        }
+
+        function nextFlashcard() {
+            if (state.fcIndex < state.fcDeck.length - 1) state.fcIndex++;
+            else state.fcIndex = 0;
+            state.fcPageStep = 1;
+            updateFlashcard();
+        }
+
+        function prevFlashcard() {
+            if (state.fcIndex > 0) state.fcIndex--;
+            else state.fcIndex = state.fcDeck.length - 1;
+            state.fcPageStep = 1;
+            updateFlashcard();
+        }
+
+        function openBackupModal() { document.getElementById('backup-modal').classList.remove('hidden'); }
+        function closeBackupModal() { document.getElementById('backup-modal').classList.add('hidden'); }
+
+        function exportBackupJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.vocabs, null, 2));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", `nihongo_mine_backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(dl);
+            dl.click();
+            dl.remove();
+        }
+
+        function importBackupJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const r = new FileReader();
+            r.onload = async (ev) => {
+                try {
+                    const list = JSON.parse(ev.target.result);
+                    if (Array.isArray(list)) {
+                        for (let item of list) await dbSaveVocab(item);
+                        await loadVocabs();
+                        autoUploadToDriveAppData();
+                        alert(`成功匯入 ${list.length} 個生字卡片！`);
+                        closeBackupModal();
+                    }
+                } catch (err) {
+                    alert('匯入失敗：格式不正確');
+                }
+            };
+            r.readAsText(file);
+        }
+    </script>
+</body>
+</html>
