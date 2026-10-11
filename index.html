@@ -18,6 +18,12 @@
     <script src="https://apis.google.com/js/api.js" async defer onload="gapiLoaded()"></script>
 
     <script>
+        if (localStorage.getItem('theme_mode') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
         tailwind.config = {
             darkMode: 'class',
             theme: {
@@ -222,6 +228,13 @@
                             </label>
                             <textarea id="input-sentence-tr" rows="2" placeholder="例：樹葉透出的日光美美地照進來。" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all"></textarea>
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-sakura-400"></span> 6. 備忘 / 參考連結 (Remarks / URL)
+                        </label>
+                        <input type="text" id="input-remarks" placeholder="例：https://jisho.org/word/... 或其他參考資料" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
@@ -530,6 +543,11 @@
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">例句中文翻譯</label>
                         <textarea id="edit-sentence-tr" rows="2" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100"></textarea>
                     </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">備忘 / 參考連結 (Remarks / URL)</label>
+                    <input type="text" id="edit-remarks" placeholder="例：https://jisho.org/word/... 或其他參考資料" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100">
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
@@ -1314,6 +1332,7 @@
             const definition = document.getElementById('input-definition').value.trim();
             const sentence = document.getElementById('input-sentence').value.trim();
             const sentenceTr = document.getElementById('input-sentence-tr').value.trim();
+            const remarks = document.getElementById('input-remarks').value.trim();
 
             const entry = {
                 id: 'vocab_' + Date.now(),
@@ -1324,6 +1343,7 @@
                 definition,
                 sentence,
                 sentenceTr,
+                remarks,
                 wordAudio: state.currentWordAudio,
                 audio: state.currentAudio,
                 image: state.currentImage,
@@ -1358,7 +1378,8 @@
         }
 
         function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme_mode', isDark ? 'dark' : 'light');
         }
 
         function setGalleryViewMode(mode) {
@@ -1472,17 +1493,17 @@
                 container.className = "space-y-3";
                 container.innerHTML = filtered.map(v => `
                     <div class="group bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
-                        <div class="absolute top-2 right-2 flex items-center gap-1 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-md shadow-sm" title="編輯">
-                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                        <div class="absolute top-1.5 right-1.5 flex items-center gap-0.5 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-0.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded shadow-sm" title="編輯">
+                                <i data-lucide="edit-3" class="w-3 h-3"></i>
                             </button>
-                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-md shadow-sm" title="刪除">
-                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-0.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded shadow-sm" title="刪除">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i>
                             </button>
                         </div>
 
-                        <div class="flex items-start sm:items-center gap-3 pr-16 flex-grow">
-                            <div class="space-y-1 w-full">
+                        <div class="flex items-start sm:items-center gap-3 pr-10 flex-grow">
+                            <div class="space-y-1.5 w-full">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="text-lg font-black text-slate-800 dark:text-slate-100 font-jp">${v.word}</span>
                                     <button type="button" onclick="playWordAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
@@ -1493,24 +1514,25 @@
                                 </div>
                                 <p class="text-xs font-bold text-slate-600 dark:text-slate-300">${v.definition}</p>
 
-                                ${v.sentence ? `
-                                    <div class="mt-2 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/50 flex items-center justify-between gap-2">
-                                        <div class="space-y-1 w-full">
-                                            <p class="text-xs text-slate-700 dark:text-slate-300 font-jp block leading-relaxed">${v.sentence}</p>${v.sentenceTr ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${v.sentenceTr}</p>` : ''}
-                                        </div>
-                                        <button type="button" onclick="playSentenceAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
-                                            <i data-lucide="music" class="w-4 h-4"></i>
-                                        </button>
+                                <div class="w-full bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/50 flex items-center justify-between gap-2">
+                                    <div class="space-y-1 w-full">
+                                        <p class="text-xs text-slate-700 dark:text-slate-300 font-jp block leading-relaxed">${v.sentence || '（未設定例句）'}</p>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${v.sentenceTr || '（未設定翻譯）'}</p>
                                     </div>
-                                ` : ''}
+                                    <button type="button" onclick="playSentenceAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
+                                        <i data-lucide="music" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        ${v.image ? `
-                            <div class="shrink-0 flex items-center justify-end">
+                        <div class="shrink-0 flex items-center justify-end">
+                            ${v.image ? `
                                 <img src="${v.image}" onclick="openImageModal('${v.image}')" class="w-44 h-28 rounded-xl object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform shadow-md" title="點擊放大圖片">
-                            </div>
-                        ` : ''}
+                            ` : `
+                                <div class="hidden sm:block w-44 h-28 opacity-0 pointer-events-none"></div>
+                            `}
+                        </div>
                     </div>
                 `).join('');
             }
@@ -1531,6 +1553,7 @@
             document.getElementById('edit-definition').value = v.definition;
             document.getElementById('edit-sentence').value = v.sentence || '';
             document.getElementById('edit-sentence-tr').value = v.sentenceTr || '';
+            document.getElementById('edit-remarks').value = v.remarks || '';
 
             toggleVerbTypeVisibility('edit-pos', 'edit-verb-type-container');
 
@@ -1590,6 +1613,7 @@
                 definition: document.getElementById('edit-definition').value.trim(),
                 sentence: document.getElementById('edit-sentence').value.trim(),
                 sentenceTr: document.getElementById('edit-sentence-tr').value.trim(),
+                remarks: document.getElementById('edit-remarks').value.trim(),
                 wordAudio: state.editWordAudio,
                 audio: state.editAudio,
                 image: state.editImage,
