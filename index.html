@@ -74,7 +74,6 @@
             font-family: inherit;
         }
 
-        /* 讓按鈕群組預設完全隱透明且不阻擋點擊，只有當鼠標懸停於按鈕群組本身時才顯示 */
         .action-btns-group {
             opacity: 0;
             pointer-events: none;
@@ -84,7 +83,6 @@
             opacity: 1;
             pointer-events: auto;
         }
-        /* 當父層卡片 hover 時，只讓按鈕群組的容器允許被 hover 觸發（但子按鈕本身 hover 時才顯示） */
         .group:hover .action-btns-group {
             pointer-events: auto;
         }
@@ -278,7 +276,7 @@
                                 </div>
                                 <div id="word-audio-prompt" onclick="document.getElementById('file-word-audio').click()" class="py-2">
                                     <i data-lucide="upload-cloud" class="w-6 h-6 mx-auto text-slate-400 mb-1"></i>
-                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">上載單詞音訊</p>
+                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">上載或拖放單詞音訊</p>
                                 </div>
                             </div>
                         </div>
@@ -301,7 +299,7 @@
 
                                 <div id="audio-prompt" onclick="document.getElementById('file-audio').click()" class="py-2">
                                     <i data-lucide="upload-cloud" class="w-6 h-6 mx-auto text-slate-400 mb-1"></i>
-                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">上載例句音訊</p>
+                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">上載或拖放例句音訊</p>
                                 </div>
                             </div>
                         </div>
@@ -1109,7 +1107,6 @@
             await loadVocabs();
             setupDropAndPasteHandlers();
 
-            // 恢復上次記錄的分頁
             switchTab(state.currentTab, false);
 
             document.addEventListener('keydown', (e) => {
@@ -1157,6 +1154,32 @@
                     }
                 }
             });
+
+            // Word Audio Drop Zone
+            const wordAudioZone = document.getElementById('drop-zone-word-audio');
+            if (wordAudioZone) {
+                wordAudioZone.addEventListener('dragover', (e) => { e.preventDefault(); wordAudioZone.classList.add('border-sakura-500'); });
+                wordAudioZone.addEventListener('dragleave', () => wordAudioZone.classList.remove('border-sakura-500'));
+                wordAudioZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    wordAudioZone.classList.remove('border-sakura-500');
+                    const files = e.dataTransfer.files;
+                    if (files.length && files[0].type.startsWith('audio/')) processWordAudioFile(files[0]);
+                });
+            }
+
+            // Sentence Audio Drop Zone
+            const audioZone = document.getElementById('drop-zone-audio');
+            if (audioZone) {
+                audioZone.addEventListener('dragover', (e) => { e.preventDefault(); audioZone.classList.add('border-sakura-500'); });
+                audioZone.addEventListener('dragleave', () => audioZone.classList.remove('border-sakura-500'));
+                audioZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    audioZone.classList.remove('border-sakura-500');
+                    const files = e.dataTransfer.files;
+                    if (files.length && files[0].type.startsWith('audio/')) processAudioFile(files[0]);
+                });
+            }
 
             const imageZone = document.getElementById('drop-zone-image');
             if (imageZone) {
@@ -1461,13 +1484,13 @@
             if (state.galleryViewMode === 'grid') {
                 container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5";
                 container.innerHTML = filtered.map(v => `
-                    <div class="group bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col justify-between space-y-3 relative">
-                        <div class="absolute top-1 right-1 flex items-center gap-0.5 z-20 action-btns-group">
-                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-0.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded shadow-sm" title="編輯">
-                                <i data-lucide="edit-3" class="w-2.5 h-2.5"></i>
+                    <div class="group bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col justify-between space-y-3 relative pt-8">
+                        <div class="absolute top-2 right-3 flex items-center gap-1 z-20 action-btns-group">
+                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-500 hover:text-sakura-500 transition-colors p-1.5 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-lg shadow-md border border-slate-200/60 dark:border-slate-700/60" title="編輯">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
                             </button>
-                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-0.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded shadow-sm" title="刪除">
-                                <i data-lucide="trash-2" class="w-2.5 h-2.5"></i>
+                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-500 hover:text-rose-500 transition-colors p-1.5 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-lg shadow-md border border-slate-200/60 dark:border-slate-700/60" title="刪除">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
 
@@ -1508,11 +1531,6 @@
                                     </button>
                                 </div>
                             ` : ''}
-                            ${v.remarks ? `
-                                <div class="mt-2 text-xs text-slate-500 dark:text-slate-400 truncate">
-                                    <span class="font-bold">備忘：</span><a href="${v.remarks}" target="_blank" class="text-sakura-500 hover:underline">${v.remarks}</a>
-                                </div>
-                            ` : ''}
                         </div>
 
                         <div class="pt-2 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-end">
@@ -1523,13 +1541,13 @@
             } else {
                 container.className = "space-y-3";
                 container.innerHTML = filtered.map(v => `
-                    <div class="group bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
-                        <div class="absolute top-1 right-1 flex items-center gap-0.5 z-20 action-btns-group">
-                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-0.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded shadow-sm" title="編輯">
-                                <i data-lucide="edit-3" class="w-2.5 h-2.5"></i>
+                    <div class="group bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative pt-8 sm:pt-4">
+                        <div class="absolute top-2 right-3 flex items-center gap-1 z-20 action-btns-group">
+                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-500 hover:text-sakura-500 transition-colors p-1.5 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-lg shadow-md border border-slate-200/60 dark:border-slate-700/60" title="編輯">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
                             </button>
-                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-0.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded shadow-sm" title="刪除">
-                                <i data-lucide="trash-2" class="w-2.5 h-2.5"></i>
+                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-500 hover:text-rose-500 transition-colors p-1.5 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-lg shadow-md border border-slate-200/60 dark:border-slate-700/60" title="刪除">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
 
@@ -1554,11 +1572,6 @@
                                         <i data-lucide="music" class="w-4 h-4"></i>
                                     </button>
                                 </div>
-                                ${v.remarks ? `
-                                    <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                                        <span class="font-bold">備忘：</span><a href="${v.remarks}" target="_blank" class="text-sakura-500 hover:underline">${v.remarks}</a>
-                                    </div>
-                                ` : ''}
                             </div>
                         </div>
 
