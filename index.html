@@ -823,19 +823,6 @@
 
                 const remoteData = res.result;
                 if (Array.isArray(remoteData)) {
-                    const localData = await dbGetAll();
-                    const localMap = new Map(localData.map(item => [item.id, item]));
-                    const remoteMap = new Map(remoteData.map(item => [item.id, item]));
-
-                    const finalMap = new Map();
-
-                    // Keep items that exist in remote
-                    for (let [id, remoteItem] of remoteMap) {
-                        finalMap.set(id, remoteItem);
-                    }
-
-                    // Add local items that are strictly newer or not present in remote (and not deleted locally vs remote if tracked, but here standard latest-wins or if local deleted we should check timestamps or just take remote as source of truth for sync, or full replacement by union minus explicitly deleted IDs if tracked. To ensure deletions sync properly: whichever has fewer items or standard full overwrite if remote is master, OR we can check if local explicitly deleted an item. Since local delete removes it from local DB, if remote still has it, local deletion wouldn't be reflected unless we overwrite local with remote OR use timestamp-based sync. To make deletions sync cleanly across devices: let's make remote data override local completely during download sync, or maintain deletion logs. Actually, standard strategy for simple sync without tombstone is: remote list is authoritative, but to allow local additions/deletions to sync both ways, we can sync by taking the union of IDs minus items present in remote that were deleted locally, OR simpler: when downloading from Drive, if local has items not in remote, we add them; if remote has items not in local, did remote delete them or did local delete them? To properly sync deletions without complex tombstones, when a user deletes locally, we immediately upload to Drive so Drive drops it. When downloading, if local has items, we can merge by checking if local items were modified or if remote is newer. Let's make sure local deletion triggers `autoUploadToDriveAppData()` immediately so the remote state updates.)
-                    
                     await dbClearAll();
                     for (let item of remoteData) {
                         await dbSaveVocab(item);
@@ -1059,7 +1046,7 @@
            ========================================================================== */
         let state = {
             vocabs: [],
-            currentTab: 'add',
+            currentTab: localStorage.getItem('current_tab') || 'add',
             galleryViewMode: 'grid',
             currentWordAudio: null,
             currentAudio: null,
@@ -1078,6 +1065,9 @@
             await initDB();
             await loadVocabs();
             setupDropAndPasteHandlers();
+
+            // 恢復上次記錄的分頁
+            switchTab(state.currentTab, false);
 
             document.addEventListener('keydown', (e) => {
                 if (state.currentTab === 'cards') {
@@ -1125,7 +1115,6 @@
                 }
             });
 
-            // Image drop zone handling
             const imageZone = document.getElementById('drop-zone-image');
             if (imageZone) {
                 imageZone.addEventListener('dragover', (e) => { e.preventDefault(); imageZone.classList.add('border-sakura-500'); });
@@ -1350,8 +1339,12 @@
             switchTab('gallery');
         }
 
-        function switchTab(tabId) {
+        function switchTab(tabId, saveToStorage = true) {
             state.currentTab = tabId;
+            if (saveToStorage) {
+                localStorage.setItem('current_tab', tabId);
+            }
+
             document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
             document.getElementById(`view-${tabId}`)?.classList.remove('hidden');
 
@@ -1422,12 +1415,12 @@
                 container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5";
                 container.innerHTML = filtered.map(v => `
                     <div class="group bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col justify-between space-y-3 relative">
-                        <div class="absolute top-3.5 right-3.5 flex items-center gap-1.5 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-md" title="編輯">
-                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        <div class="absolute top-2 right-2 flex items-center gap-1 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-md shadow-sm" title="編輯">
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                             </button>
-                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-md" title="刪除">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-md shadow-sm" title="刪除">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                             </button>
                         </div>
 
@@ -1479,12 +1472,12 @@
                 container.className = "space-y-3";
                 container.innerHTML = filtered.map(v => `
                     <div class="group bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
-                        <div class="absolute top-2.5 right-3 flex items-center gap-1.5 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-md" title="編輯">
-                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        <div class="absolute top-2 right-2 flex items-center gap-1 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-md shadow-sm" title="編輯">
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                             </button>
-                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-md" title="刪除">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-md shadow-sm" title="刪除">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                             </button>
                         </div>
 
