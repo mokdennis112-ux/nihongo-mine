@@ -18,6 +18,13 @@
     <script src="https://apis.google.com/js/api.js" async defer onload="gapiLoaded()"></script>
 
     <script>
+        // 初始化載入 Dark/Light Mode
+        if (localStorage.getItem('theme_mode') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
         tailwind.config = {
             darkMode: 'class',
             theme: {
@@ -88,7 +95,7 @@
 
                 <!-- Navigation Tabs -->
                 <nav class="hidden md:flex space-x-1 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200/60 dark:border-slate-700/50">
-                    <button id="nav-add" onclick="switchTab('add')" class="nav-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 text-sakura-600 bg-white dark:bg-slate-700 shadow-sm">
+                    <button id="nav-add" onclick="switchTab('add')" class="nav-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300">
                         <i data-lucide="plus-circle" class="w-4 h-4"></i> 新增單詞
                     </button>
                     <button id="nav-gallery" onclick="switchTab('gallery')" class="nav-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300">
@@ -126,7 +133,7 @@
 
         <!-- Mobile Navigation Bar -->
         <div class="md:hidden flex border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-japan-800 px-2 py-1.5 justify-around text-xs font-semibold">
-            <button id="mob-add" onclick="switchTab('add')" class="mob-btn flex flex-col items-center py-1 px-3 text-sakura-600">
+            <button id="mob-add" onclick="switchTab('add')" class="mob-btn flex flex-col items-center py-1 px-3 text-slate-500">
                 <i data-lucide="plus-circle" class="w-5 h-5 mb-0.5"></i> 新增單詞
             </button>
             <button id="mob-gallery" onclick="switchTab('gallery')" class="mob-btn flex flex-col items-center py-1 px-3 text-slate-500">
@@ -222,6 +229,13 @@
                             </label>
                             <textarea id="input-sentence-tr" rows="2" placeholder="例：樹葉透出的日光美美地照進來。" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all"></textarea>
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-sakura-400"></span> 6. 備忘 / 參考連結 (Remarks / URL)
+                        </label>
+                        <input type="text" id="input-remarks" placeholder="例：https://jisho.org/word/... 或其他參考資料" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
@@ -530,6 +544,11 @@
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">例句中文翻譯</label>
                         <textarea id="edit-sentence-tr" rows="2" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100"></textarea>
                     </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">備忘 / 參考連結 (Remarks)</label>
+                    <input type="text" id="edit-remarks" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100">
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
@@ -841,7 +860,7 @@
         }
 
         /* ==========================================================================
-           TTS & AUDIO PLAYBACK ENGINE (Priority: User Uploaded Audio -> TTS at rate 1.0)
+           TTS & AUDIO PLAYBACK ENGINE
            ========================================================================== */
         function isAppleMobile() {
             return /iPad|iPhone|iPod/.test(navigator.userAgent)
@@ -1066,7 +1085,6 @@
             await loadVocabs();
             setupDropAndPasteHandlers();
 
-            // 恢復上次記錄的分頁
             switchTab(state.currentTab, false);
 
             document.addEventListener('keydown', (e) => {
@@ -1314,6 +1332,7 @@
             const definition = document.getElementById('input-definition').value.trim();
             const sentence = document.getElementById('input-sentence').value.trim();
             const sentenceTr = document.getElementById('input-sentence-tr').value.trim();
+            const remarks = document.getElementById('input-remarks').value.trim();
 
             const entry = {
                 id: 'vocab_' + Date.now(),
@@ -1324,6 +1343,7 @@
                 definition,
                 sentence,
                 sentenceTr,
+                remarks,
                 wordAudio: state.currentWordAudio,
                 audio: state.currentAudio,
                 image: state.currentImage,
@@ -1348,17 +1368,34 @@
             document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
             document.getElementById(`view-${tabId}`)?.classList.remove('hidden');
 
+            // 統一亮燈 PC 上排 Tab
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('bg-white', 'dark:bg-slate-700', 'text-sakura-600', 'shadow-sm');
+                btn.classList.remove('bg-white', 'dark:bg-slate-700', 'text-sakura-600', 'dark:text-sakura-400', 'shadow-sm');
                 btn.classList.add('text-slate-600', 'dark:text-slate-300');
             });
-            document.getElementById(`nav-${tabId}`)?.classList.add('bg-white', 'dark:bg-slate-700', 'text-sakura-600', 'shadow-sm');
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-slate-600', 'dark:text-slate-300');
+                activeNav.classList.add('bg-white', 'dark:bg-slate-700', 'text-sakura-600', 'dark:text-sakura-400', 'shadow-sm');
+            }
+
+            // 統一亮燈手機下方 Tab
+            document.querySelectorAll('.mob-btn').forEach(btn => {
+                btn.classList.remove('text-sakura-600', 'dark:text-sakura-400');
+                btn.classList.add('text-slate-500');
+            });
+            const activeMob = document.getElementById(`mob-${tabId}`);
+            if (activeMob) {
+                activeMob.classList.remove('text-slate-500');
+                activeMob.classList.add('text-sakura-600', 'dark:text-sakura-400');
+            }
 
             if (tabId === 'cards') setupFlashcards();
         }
 
         function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme_mode', isDark ? 'dark' : 'light');
         }
 
         function setGalleryViewMode(mode) {
@@ -1366,10 +1403,10 @@
             const gridBtn = document.getElementById('view-mode-grid');
             const listBtn = document.getElementById('view-mode-list');
             if (mode === 'grid') {
-                gridBtn.className = 'p-2 rounded-xl text-sakura-600 bg-white dark:bg-slate-800 shadow-sm transition-all';
+                gridBtn.className = 'p-2 rounded-xl text-sakura-600 dark:text-sakura-400 bg-white dark:bg-slate-800 shadow-sm transition-all';
                 listBtn.className = 'p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 transition-all';
             } else {
-                listBtn.className = 'p-2 rounded-xl text-sakura-600 bg-white dark:bg-slate-800 shadow-sm transition-all';
+                listBtn.className = 'p-2 rounded-xl text-sakura-600 dark:text-sakura-400 bg-white dark:bg-slate-800 shadow-sm transition-all';
                 gridBtn.className = 'p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 transition-all';
             }
             renderGallery();
@@ -1415,12 +1452,12 @@
                 container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5";
                 container.innerHTML = filtered.map(v => `
                     <div class="group bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col justify-between space-y-3 relative">
-                        <div class="absolute top-2 right-2 flex items-center gap-1 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-md shadow-sm" title="編輯">
-                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                        <div class="absolute top-1.5 right-1.5 flex items-center gap-0.5 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded shadow-sm" title="編輯">
+                                <i data-lucide="edit-3" class="w-3 h-3"></i>
                             </button>
-                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-md shadow-sm" title="刪除">
-                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded shadow-sm" title="刪除">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i>
                             </button>
                         </div>
 
@@ -1472,16 +1509,16 @@
                 container.className = "space-y-3";
                 container.innerHTML = filtered.map(v => `
                     <div class="group bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
-                        <div class="absolute top-2 right-2 flex items-center gap-1 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-md shadow-sm" title="編輯">
-                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                        <div class="absolute top-1.5 right-1.5 flex items-center gap-0.5 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded shadow-sm" title="編輯">
+                                <i data-lucide="edit-3" class="w-3 h-3"></i>
                             </button>
-                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-md shadow-sm" title="刪除">
-                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded shadow-sm" title="刪除">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i>
                             </button>
                         </div>
 
-                        <div class="flex items-start sm:items-center gap-3 pr-16 flex-grow">
+                        <div class="flex items-start sm:items-center gap-3 pr-12 flex-grow">
                             <div class="space-y-1 w-full">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="text-lg font-black text-slate-800 dark:text-slate-100 font-jp">${v.word}</span>
@@ -1493,16 +1530,15 @@
                                 </div>
                                 <p class="text-xs font-bold text-slate-600 dark:text-slate-300">${v.definition}</p>
 
-                                ${v.sentence ? `
-                                    <div class="mt-2 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/50 flex items-center justify-between gap-2">
-                                        <div class="space-y-1 w-full">
-                                            <p class="text-xs text-slate-700 dark:text-slate-300 font-jp block leading-relaxed">${v.sentence}</p>${v.sentenceTr ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${v.sentenceTr}</p>` : ''}
-                                        </div>
-                                        <button type="button" onclick="playSentenceAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
-                                            <i data-lucide="music" class="w-4 h-4"></i>
-                                        </button>
+                                <div class="w-full mt-2 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/50 flex items-center justify-between gap-2">
+                                    <div class="space-y-1 w-full">
+                                        <p class="text-xs text-slate-700 dark:text-slate-300 font-jp block leading-relaxed">${v.sentence || '（未設定例句）'}</p>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${v.sentenceTr || '（未設定翻譯）'}</p>
                                     </div>
-                                ` : ''}
+                                    <button type="button" onclick="playSentenceAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
+                                        <i data-lucide="music" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -1531,6 +1567,7 @@
             document.getElementById('edit-definition').value = v.definition;
             document.getElementById('edit-sentence').value = v.sentence || '';
             document.getElementById('edit-sentence-tr').value = v.sentenceTr || '';
+            document.getElementById('edit-remarks').value = v.remarks || '';
 
             toggleVerbTypeVisibility('edit-pos', 'edit-verb-type-container');
 
@@ -1590,6 +1627,7 @@
                 definition: document.getElementById('edit-definition').value.trim(),
                 sentence: document.getElementById('edit-sentence').value.trim(),
                 sentenceTr: document.getElementById('edit-sentence-tr').value.trim(),
+                remarks: document.getElementById('edit-remarks').value.trim(),
                 wordAudio: state.editWordAudio,
                 audio: state.editAudio,
                 image: state.editImage,
@@ -1721,263 +1759,4 @@
         }
 
         function completePopupCanvas() {
-            const popupCanvas = document.getElementById('popup-hw-canvas');
-            const cardCanvas = document.getElementById('hw-card-canvas');
-            if (popupCanvas && cardCanvas && cardCanvasCtx) {
-                cardCanvasCtx.clearRect(0, 0, cardCanvas.width, cardCanvas.height);
-                cardCanvasCtx.drawImage(popupCanvas, 0, 0, cardCanvas.width, cardCanvas.height);
-            }
-            closeCanvasModal();
-        }
-
-        function initPopupCanvas() {
-            const canvas = document.getElementById('popup-hw-canvas');
-            if (!canvas) return;
-
-            const rect = canvas.parentElement.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-
-            popupCanvasCtx = canvas.getContext('2d');
-            popupCanvasCtx.strokeStyle = '#e83e6b';
-            popupCanvasCtx.lineWidth = 5;
-            popupCanvasCtx.lineCap = 'round';
-
-            const startDraw = (e) => {
-                isPopupDrawing = true;
-                popupCanvasCtx.beginPath();
-                const pos = getCanvasPos(e, canvas);
-                popupCanvasCtx.moveTo(pos.x, pos.y);
-            };
-
-            const draw = (e) => {
-                if (!isPopupDrawing) return;
-                const pos = getCanvasPos(e, canvas);
-                popupCanvasCtx.lineTo(pos.x, pos.y);
-                popupCanvasCtx.stroke();
-            };
-
-            const stopDraw = () => { isPopupDrawing = false; };
-
-            canvas.onmousedown = startDraw;
-            canvas.onmousemove = draw;
-            canvas.onmouseup = stopDraw;
-
-            canvas.ontouchstart = (e) => { e.preventDefault(); startDraw(e.touches[0]); };
-            canvas.ontouchmove = (e) => { e.preventDefault(); draw(e.touches[0]); };
-            canvas.ontouchend = stopDraw;
-        }
-
-        function clearPopupCanvas() {
-            const canvas = document.getElementById('popup-hw-canvas');
-            if (canvas && popupCanvasCtx) {
-                popupCanvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-            }
-        }
-
-        function getCanvasPos(evt, canvas) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-
-            const clientX = evt.clientX !== undefined ? evt.clientX : (evt.touches && evt.touches[0] ? evt.touches[0].clientX : 0);
-            const clientY = evt.clientY !== undefined ? evt.clientY : (evt.touches && evt.touches[0] ? evt.touches[0].clientY : 0);
-
-            return {
-                x: (clientX - rect.left) * scaleX,
-                y: (clientY - rect.top) * scaleY
-            };
-        }
-
-        function renderFullBackContent(cur) {
-            return `
-                <div class="space-y-2.5 w-full max-w-md mx-auto text-center flex flex-col items-center justify-center">
-                    <div class="flex items-center justify-center gap-2">
-                        <ruby class="text-3xl sm:text-4xl font-black text-slate-800 dark:text-slate-100 font-jp text-center">
-                            ${cur.word} <rt class="text-xs text-sakura-500 font-medium">${cur.reading || ''}</rt>
-                        </ruby>
-                        <button type="button" onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
-                            <i data-lucide="volume-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                    
-                    ${cur.pos ? `
-                        <div class="text-center">
-                            <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-lg bg-sakura-50 text-sakura-600 border border-sakura-100 dark:bg-sakura-900/40 dark:text-sakura-400">
-                                ${cur.pos}${cur.verbType ? ` (${cur.verbType})` : ''}
-                            </span>
-                        </div>
-                    ` : ''}
-
-                    <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-slate-100 leading-snug text-center">${cur.definition}</h3>
-
-                    ${cur.sentence ? `
-                        <div class="w-full bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-700/50 space-y-1 flex items-center justify-between gap-2">
-                            <div class="space-y-1 w-full text-left">
-                                <p class="text-xs text-slate-700 dark:text-slate-300 font-jp block leading-relaxed">${cur.sentence}</p>${cur.sentenceTr ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${cur.sentenceTr}</p>` : ''}
-                            </div>
-                            <button type="button" onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
-                                <i data-lucide="music" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    ` : ''}
-
-                    ${cur.image ? `<img src="${cur.image}" onclick="event.stopPropagation(); openImageModal('${cur.image}')" class="max-h-24 sm:max-h-28 rounded-xl border border-slate-200 dark:border-slate-700 mx-auto shadow-md object-cover cursor-pointer hover:scale-105 transition-transform">` : ''}
-                </div>
-            `;
-        }
-
-        function updateFlashcard() {
-            const cardBody = document.getElementById('fc-card-content');
-            const cardLabel = document.getElementById('fc-card-label');
-            const topRightActions = document.getElementById('fc-top-right-actions');
-            const clickHint = document.getElementById('fc-click-hint');
-
-            if (state.fcDeck.length === 0) {
-                document.getElementById('fc-status').textContent = `進度: 0 / 0`;
-                cardBody.innerHTML = `<h3 class="text-xl font-bold text-slate-400">目前未有選取的卡片</h3>`;
-                topRightActions.innerHTML = '';
-                return;
-            }
-
-            const cur = state.fcDeck[state.fcIndex];
-            document.getElementById('fc-status').textContent = `進度: ${state.fcIndex + 1} / ${state.fcDeck.length}`;
-            document.getElementById('fc-progress').style.width = `${((state.fcIndex + 1) / state.fcDeck.length) * 100}%`;
-
-            topRightActions.innerHTML = '';
-
-            if (state.fcMode === 'standard') {
-                if (state.fcPageStep === 1) {
-                    cardLabel.textContent = "正面：日文單詞與例句";
-                    clickHint.textContent = "點擊卡片翻看背面釋義";
-                    cardBody.innerHTML = `
-                        <div class="text-center w-full space-y-3">
-                            <div class="flex items-center justify-center gap-2">
-                                <ruby class="text-4xl sm:text-5xl font-black text-slate-800 dark:text-slate-100 font-jp tracking-wide">
-                                    ${cur.word} <rt class="text-base text-sakura-500 font-medium">${cur.reading || ''}</rt>
-                                </ruby>
-                                <button type="button" onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="p-2 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
-                                    <i data-lucide="volume-2" class="w-5 h-5"></i>
-                                </button>
-                            </div>
-                            ${cur.sentence ? `
-                                <div class="flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-2xl max-w-md mx-auto">
-                                    <p class="text-xs font-jp text-slate-600 dark:text-slate-300 text-left">${cur.sentence}</p>
-                                    <button type="button" onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
-                                        <i data-lucide="music" class="w-4 h-4"></i>
-                                    </button>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
-                } else {
-                    cardLabel.textContent = "背面：釋義與詳細資訊";
-                    clickHint.textContent = "點擊卡片返回正面";
-                    cardBody.innerHTML = renderFullBackContent(cur);
-                }
-            } else if (state.fcMode === 'chinese_front') {
-                if (state.fcPageStep === 1) {
-                    cardLabel.textContent = "第一頁：中文釋義";
-                    clickHint.textContent = "點擊進入【第二頁：手寫練習板】";
-                    cardBody.innerHTML = `
-                        <h3 class="text-3xl sm:text-4xl font-extrabold text-slate-800 dark:text-slate-100 text-center">${cur.definition}</h3>
-                    `;
-                } else if (state.fcPageStep === 2) {
-                    cardLabel.textContent = "第二頁：手寫畫板";
-                    clickHint.textContent = "點擊進入【第三頁：對答案與詳細資訊】";
-                    cardBody.innerHTML = `
-                        <div class="space-y-2 w-full flex flex-col items-center justify-center" onclick="event.stopPropagation()">
-                            <canvas id="hw-card-canvas" width="460" height="230" class="w-full max-w-lg border-2 border-dashed border-sakura-300 dark:border-slate-600 rounded-2xl bg-slate-50 dark:bg-slate-900 touch-none cursor-crosshair shadow-inner"></canvas>
-                            
-                            <div class="flex items-center gap-2">
-                                <button type="button" onclick="clearCardCanvas(event)" class="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-xs text-rose-500 font-bold hover:bg-slate-200 transition-colors">
-                                    清除畫板
-                                </button>
-                                <button type="button" onclick="openCanvasModal(event)" class="px-3.5 py-1.5 rounded-xl bg-sakura-500 text-xs text-white font-bold hover:bg-sakura-600 transition-colors flex items-center gap-1 shadow-sm">
-                                    <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> 放大全螢幕手寫
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    setTimeout(initCardCanvas, 50);
-                } else {
-                    cardLabel.textContent = "第三頁：完整解答與欄位資訊";
-                    clickHint.textContent = "點擊重頭開始 (返回第一頁)";
-                    cardBody.innerHTML = renderFullBackContent(cur);
-                }
-            } else if (state.fcMode === 'audio_only') {
-                if (state.fcPageStep === 1) {
-                    cardLabel.textContent = "正面：聽力訓練";
-                    clickHint.textContent = "點擊卡片翻看背面解答";
-                    cardBody.innerHTML = `
-                        <div class="space-y-4 text-center">
-                            <button type="button" onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="px-6 py-3 rounded-2xl bg-sakura-500 hover:bg-sakura-600 text-white font-bold text-sm shadow-lg flex items-center gap-2 mx-auto">
-                                <i data-lucide="volume-2" class="w-5 h-5"></i> 播放日文單詞音訊
-                            </button>
-                            ${cur.sentence ? `
-                                <button type="button" onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 font-bold text-xs flex items-center gap-2 mx-auto">
-                                    <i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 播放例句音訊
-                                </button>
-                            ` : ''}
-                        </div>
-                    `;
-                } else {
-                    cardLabel.textContent = "背面：完整解答與欄位資訊";
-                    clickHint.textContent = "點擊卡片返回正面";
-                    cardBody.innerHTML = renderFullBackContent(cur);
-                }
-            }
-
-            lucide.createIcons();
-        }
-
-        function nextFlashcard() {
-            if (state.fcIndex < state.fcDeck.length - 1) state.fcIndex++;
-            else state.fcIndex = 0;
-            state.fcPageStep = 1;
-            updateFlashcard();
-        }
-
-        function prevFlashcard() {
-            if (state.fcIndex > 0) state.fcIndex--;
-            else state.fcIndex = state.fcDeck.length - 1;
-            state.fcPageStep = 1;
-            updateFlashcard();
-        }
-
-        function openBackupModal() { document.getElementById('backup-modal').classList.remove('hidden'); }
-        function closeBackupModal() { document.getElementById('backup-modal').classList.add('hidden'); }
-
-        function exportBackupJSON() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.vocabs, null, 2));
-            const dl = document.createElement('a');
-            dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", `nihongo_mine_backup_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(dl);
-            dl.click();
-            dl.remove();
-        }
-
-        function importBackupJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const r = new FileReader();
-            r.onload = async (ev) => {
-                try {
-                    const list = JSON.parse(ev.target.result);
-                    if (Array.isArray(list)) {
-                        for (let item of list) await dbSaveVocab(item);
-                        await loadVocabs();
-                        autoUploadToDriveAppData();
-                        alert(`成功匯入 ${list.length} 個生字卡片！`);
-                        closeBackupModal();
-                    }
-                } catch (err) {
-                    alert('匯入失敗：格式不正確');
-                }
-            };
-            r.readAsText(file);
-        }
-    </script>
-</body>
-</html>
+            const popupCanvas =
