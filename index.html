@@ -166,14 +166,13 @@
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-sakura-500"></span> 1. 採集到的日文單詞 *
                             </label>
-                            <input type="text" id="input-word" required placeholder="例：木漏れ日, 恋愛" oninput="scheduleAutoReading('add')" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp font-bold text-lg focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
+                            <input type="text" id="input-word" required oninput="handleWordInput(this.value)" placeholder="例：木漏れ日, 恋愛" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp font-bold text-lg focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-sakura-400"></span> 2. 單詞讀音 / 平假名
                             </label>
-                            <input type="text" id="input-reading" placeholder="例：こもれび, れんあい" oninput="noteReadingEdit('add')" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
-                            <p id="reading-hint-add" class="text-[10px] text-slate-400 mt-1.5">輸入日文後會自動填入平假名，仍可自行修改</p>
+                            <input type="text" id="input-reading" placeholder="例：こもれび, れんあい" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 font-jp focus:outline-none focus:ring-2 focus:ring-sakura-500/50 transition-all">
                         </div>
                     </div>
 
@@ -228,69 +227,66 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
-                                <span class="flex items-center gap-1.5"><i data-lucide="volume-2" class="w-4 h-4 text-sakura-500"></i> 6. 單詞音訊</span>
-                                <span id="word-audio-filename" class="text-[10px] text-slate-400 font-mono">未選擇</span>
+                                <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 單詞音訊 (Word Audio)</span>
+                                <span id="word-audio-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
                             </label>
-                            <div id="drop-zone-word-audio" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-4 text-center transition-all cursor-pointer">
+                            <div id="drop-zone-word-audio" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
                                 <input type="file" id="file-word-audio" accept="audio/*" onchange="handleWordAudioUpload(event)" class="hidden">
                                 <div id="word-audio-preview-container" class="hidden space-y-2">
                                     <audio id="word-audio-element" controls class="w-full h-8 max-w-full"></audio>
                                     <button type="button" onclick="clearWordAudio(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
-                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除，改用 TTS
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除
                                     </button>
                                 </div>
                                 <div id="word-audio-prompt" onclick="document.getElementById('file-word-audio').click()" class="py-2">
-                                    <i data-lucide="upload-cloud" class="w-7 h-7 mx-auto text-slate-400 mb-1"></i>
-                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">上載單詞錄音</p>
-                                    <p class="text-[10px] text-slate-400 mt-0.5">沒有檔案時會用 TTS</p>
+                                    <i data-lucide="upload-cloud" class="w-6 h-6 mx-auto text-slate-400 mb-1"></i>
+                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">上載單詞音訊</p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
-                                <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 7. 例句音訊</span>
-                                <span id="audio-filename" class="text-[10px] text-slate-400 font-mono">未選擇檔案</span>
+                                <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 例句音訊 (Sentence Audio)</span>
+                                <span id="audio-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
                             </label>
                             
-                            <div id="drop-zone-audio" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-4 text-center transition-all cursor-pointer">
+                            <div id="drop-zone-audio" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
                                 <input type="file" id="file-audio" accept="audio/*" onchange="handleAudioUpload(event)" class="hidden">
                                 
                                 <div id="audio-preview-container" class="hidden space-y-2">
                                     <audio id="audio-element" controls class="w-full h-8 max-w-full"></audio>
                                     <button type="button" onclick="clearAudio(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
-                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除，改用 TTS
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除
                                     </button>
                                 </div>
 
                                 <div id="audio-prompt" onclick="document.getElementById('file-audio').click()" class="py-2">
-                                    <i data-lucide="upload-cloud" class="w-7 h-7 mx-auto text-slate-400 mb-1"></i>
-                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">上載例句錄音</p>
-                                    <p class="text-[10px] text-slate-400 mt-0.5">沒有檔案時會用 TTS</p>
+                                    <i data-lucide="upload-cloud" class="w-6 h-6 mx-auto text-slate-400 mb-1"></i>
+                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">上載例句音訊</p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
-                                <span class="flex items-center gap-1.5"><i data-lucide="image" class="w-4 h-4 text-sakura-500"></i> 8. 參考截圖</span>
-                                <span id="image-filename" class="text-[10px] text-slate-400 font-mono">未選擇檔案</span>
+                                <span class="flex items-center gap-1.5"><i data-lucide="image" class="w-4 h-4 text-sakura-500"></i> 參考截圖 (Photo)</span>
+                                <span id="image-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
                             </label>
 
-                            <div id="drop-zone-image" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-4 text-center transition-all cursor-pointer">
+                            <div id="drop-zone-image" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
                                 <input type="file" id="file-image" accept="image/*" onchange="handleImageUpload(event)" class="hidden">
                                 
                                 <div id="image-preview-container" class="hidden space-y-2">
-                                    <img id="image-element" src="" class="max-h-28 mx-auto rounded-xl shadow-md border border-slate-200 dark:border-slate-700 object-cover">
+                                    <img id="image-element" src="" class="max-h-20 mx-auto rounded-xl shadow-md border border-slate-200 dark:border-slate-700 object-cover">
                                     <button type="button" onclick="clearImage(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
-                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除截圖
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除
                                     </button>
                                 </div>
 
                                 <div id="image-prompt" onclick="document.getElementById('file-image').click()" class="py-2">
-                                    <i data-lucide="camera" class="w-7 h-7 mx-auto text-slate-400 mb-1"></i>
-                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">點擊、拖放或貼上圖片</p>
-                                    <p class="text-[10px] text-slate-400 mt-0.5">可直接從剪貼簿貼上截圖</p>
+                                    <i data-lucide="camera" class="w-6 h-6 mx-auto text-slate-400 mb-1"></i>
+                                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">上載或貼上截圖</p>
                                 </div>
                             </div>
                         </div>
@@ -499,12 +495,11 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">日文單詞 *</label>
-                        <input type="text" id="edit-word" required oninput="scheduleAutoReading('edit')" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 font-jp font-bold">
+                        <input type="text" id="edit-word" required oninput="handleEditWordInput(this.value)" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 font-jp font-bold">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">平假名 / 讀音</label>
-                        <input type="text" id="edit-reading" oninput="noteReadingEdit('edit')" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 font-jp">
-                        <p id="reading-hint-edit" class="text-[10px] text-slate-400 mt-1">改單詞會重新產生平假名</p>
+                        <input type="text" id="edit-reading" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 font-jp">
                     </div>
                 </div>
 
@@ -637,8 +632,6 @@
         <img id="lightbox-image" src="" class="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain">
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
     <script>
         /* ==========================================================================
            GOOGLE DRIVE API & AUTO OAUTH SYNC CONFIG
@@ -853,12 +846,7 @@
         }
 
         /* ==========================================================================
-           TTS
-           - iOS / iPadOS Safari: do not pin a voice. Setting voice there
-             forces the low-quality Eloquence voice. Leaving it unset lets
-             Safari use the system Japanese voice (the path that sounds good).
-           - Desktop Edge / Chrome: pin Microsoft Nanami / Keita Neural,
-             which is the path that sounds good on PC.
+           TTS & AUDIO PLAYBACK ENGINE (Priority: User Uploaded Audio -> TTS at rate 1.0)
            ========================================================================== */
         function isAppleMobile() {
             return /iPad|iPhone|iPod/.test(navigator.userAgent)
@@ -875,7 +863,7 @@
                 synth.cancel();
                 const u = new SpeechSynthesisUtterance(text);
                 u.lang = 'ja-JP';
-                u.rate = 0.9;
+                u.rate = 1.0;
 
                 if (!appleMobile) {
                     const voices = synth.getVoices();
@@ -892,7 +880,6 @@
                 synth.speak(u);
             };
 
-            // Edge often reports an empty voice list until voiceschanged.
             if (!appleMobile && synth.getVoices().length === 0) {
                 let done = false;
                 const once = () => {
@@ -918,6 +905,71 @@
                 window.speechSynthesis.getVoices();
             };
             window.speechSynthesis.getVoices();
+        }
+
+        function playWordAudio(id) {
+            const v = state.vocabs.find(x => x.id === id);
+            if (v && v.wordAudio) {
+                const audio = new Audio(v.wordAudio);
+                audio.play();
+            } else if (v) {
+                speakJapanese(v.word);
+            }
+        }
+
+        function playSentenceAudio(id) {
+            const v = state.vocabs.find(x => x.id === id);
+            if (v && v.audio) {
+                const audio = new Audio(v.audio);
+                audio.play();
+            } else if (v && v.sentence) {
+                speakJapanese(v.sentence);
+            }
+        }
+
+        /* ==========================================================================
+           AUTO-GENERATED READING (HIRAGANA) ON INPUT
+           ========================================================================== */
+        let readingTimer = null;
+        function handleWordInput(val) {
+            const word = val.trim();
+            if (!word) return;
+            clearTimeout(readingTimer);
+            readingTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(word)}`);
+                    const json = await res.json();
+                    if (json.data && json.data.length > 0) {
+                        const jp = json.data[0].japanese;
+                        if (jp && jp[0] && jp[0].reading) {
+                            document.getElementById('input-reading').value = jp[0].reading;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Auto reading fetch failed', e);
+                }
+            }, 400);
+        }
+
+        let editReadingTimer = null;
+        function handleEditWordInput(val) {
+            const word = val.trim();
+            if (!word) return;
+            clearTimeout(editReadingTimer);
+            editReadingTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(word)}`);
+                    const json = await res.json();
+                    if (json.data && json.data.length > 0) {
+                        const jp = json.data[0].japanese;
+                        if (jp && jp[0] && jp[0].reading) {
+                            document.getElementById('edit-reading').value = jp[0].reading;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Auto edit reading fetch failed', e);
+                }
+            }, 400);
         }
 
         function toggleVerbTypeVisibility(posSelectId, containerId) {
@@ -1002,8 +1054,10 @@
             currentTab: 'add',
             galleryViewMode: 'grid',
             mediaFilters: { audio: false, image: false },
+            currentWordAudio: null,
             currentAudio: null,
             currentImage: null,
+            editWordAudio: null,
             editAudio: null,
             editImage: null,
             fcIndex: 0,
@@ -1063,46 +1117,32 @@
                     }
                 }
             });
+        }
 
-            const audioZone = document.getElementById('drop-zone-audio');
-            audioZone.addEventListener('dragover', (e) => { e.preventDefault(); audioZone.classList.add('border-sakura-500'); });
-            audioZone.addEventListener('dragleave', () => audioZone.classList.remove('border-sakura-500'));
-            audioZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                audioZone.classList.remove('border-sakura-500');
-                const files = e.dataTransfer.files;
-                if (files.length && files[0].type.startsWith('audio/')) processAudioFile(files[0]);
-            });
+        function processWordAudioFile(file) {
+            const r = new FileReader();
+            r.onload = (ev) => {
+                state.currentWordAudio = ev.target.result;
+                document.getElementById('word-audio-element').src = state.currentWordAudio;
+                document.getElementById('word-audio-prompt').classList.add('hidden');
+                document.getElementById('word-audio-preview-container').classList.remove('hidden');
+                document.getElementById('word-audio-filename').textContent = file.name;
+            };
+            r.readAsDataURL(file);
+        }
 
-            const imageZone = document.getElementById('drop-zone-image');
-            imageZone.addEventListener('dragover', (e) => { e.preventDefault(); imageZone.classList.add('border-sakura-500'); });
-            imageZone.addEventListener('dragleave', () => imageZone.classList.remove('border-sakura-500'));
-            imageZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                imageZone.classList.remove('border-sakura-500');
-                const files = e.dataTransfer.files;
-                if (files.length && files[0].type.startsWith('image/')) processImageFile(files[0]);
-            });
+        function handleWordAudioUpload(e) {
+            const file = e.target.files[0];
+            if (file) processWordAudioFile(file);
+        }
 
-            const editAudioZone = document.getElementById('edit-drop-zone-audio');
-            editAudioZone.addEventListener('dragover', (e) => { e.preventDefault(); editAudioZone.classList.add('border-sakura-500'); });
-            editAudioZone.addEventListener('dragleave', () => editAudioZone.classList.remove('border-sakura-500'));
-            editAudioZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                editAudioZone.classList.remove('border-sakura-500');
-                const files = e.dataTransfer.files;
-                if (files.length && files[0].type.startsWith('audio/')) processEditAudioFile(files[0]);
-            });
-
-            const editImageZone = document.getElementById('edit-drop-zone-image');
-            editImageZone.addEventListener('dragover', (e) => { e.preventDefault(); editImageZone.classList.add('border-sakura-500'); });
-            editImageZone.addEventListener('dragleave', () => editImageZone.classList.remove('border-sakura-500'));
-            editImageZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                editImageZone.classList.remove('border-sakura-500');
-                const files = e.dataTransfer.files;
-                if (files.length && files[0].type.startsWith('image/')) processEditImageFile(files[0]);
-            });
+        function clearWordAudio(e) {
+            if (e) e.stopPropagation();
+            state.currentWordAudio = null;
+            document.getElementById('file-word-audio').value = '';
+            document.getElementById('word-audio-prompt').classList.remove('hidden');
+            document.getElementById('word-audio-preview-container').classList.add('hidden');
+            document.getElementById('word-audio-filename').textContent = '選填';
         }
 
         function processAudioFile(file) {
@@ -1128,7 +1168,7 @@
             document.getElementById('file-audio').value = '';
             document.getElementById('audio-prompt').classList.remove('hidden');
             document.getElementById('audio-preview-container').classList.add('hidden');
-            document.getElementById('audio-filename').textContent = '未選擇檔案';
+            document.getElementById('audio-filename').textContent = '選填';
         }
 
         function processImageFile(file) {
@@ -1154,7 +1194,33 @@
             document.getElementById('file-image').value = '';
             document.getElementById('image-prompt').classList.remove('hidden');
             document.getElementById('image-preview-container').classList.add('hidden');
-            document.getElementById('image-filename').textContent = '未選擇檔案';
+            document.getElementById('image-filename').textContent = '選填';
+        }
+
+        function processEditWordAudioFile(file) {
+            const r = new FileReader();
+            r.onload = (ev) => {
+                state.editWordAudio = ev.target.result;
+                document.getElementById('edit-word-audio-element').src = state.editWordAudio;
+                document.getElementById('edit-word-audio-prompt').classList.add('hidden');
+                document.getElementById('edit-word-audio-preview-container').classList.remove('hidden');
+                document.getElementById('edit-word-audio-filename').textContent = file.name;
+            };
+            r.readAsDataURL(file);
+        }
+
+        function handleEditWordAudioUpload(e) {
+            const file = e.target.files[0];
+            if (file) processEditWordAudioFile(file);
+        }
+
+        function clearEditWordAudio(e) {
+            if (e) e.stopPropagation();
+            state.editWordAudio = null;
+            document.getElementById('edit-file-word-audio').value = '';
+            document.getElementById('edit-word-audio-prompt').classList.remove('hidden');
+            document.getElementById('edit-word-audio-preview-container').classList.add('hidden');
+            document.getElementById('edit-word-audio-filename').textContent = '選填';
         }
 
         function processEditAudioFile(file) {
@@ -1180,7 +1246,7 @@
             document.getElementById('edit-file-audio').value = '';
             document.getElementById('edit-audio-prompt').classList.remove('hidden');
             document.getElementById('edit-audio-preview-container').classList.add('hidden');
-            document.getElementById('edit-audio-filename').textContent = '未選擇檔案';
+            document.getElementById('edit-audio-filename').textContent = '選填';
         }
 
         function processEditImageFile(file) {
@@ -1206,18 +1272,19 @@
             document.getElementById('edit-file-image').value = '';
             document.getElementById('edit-image-prompt').classList.remove('hidden');
             document.getElementById('edit-image-preview-container').classList.add('hidden');
-            document.getElementById('edit-image-filename').textContent = '未選擇檔案';
+            document.getElementById('edit-image-filename').textContent = '選填';
         }
 
         function clearForm() {
             document.getElementById('vocab-form').reset();
             document.getElementById('verb-type-container').classList.add('hidden');
+            clearWordAudio();
             clearAudio();
             clearImage();
         }
 
-        async function handleVocabSubmit(e) {
-            e.preventDefault();
+        async function handleVocabSubmit(event) {
+            event.preventDefault();
 
             const word = document.getElementById('input-word').value.trim();
             const reading = document.getElementById('input-reading').value.trim();
@@ -1236,6 +1303,7 @@
                 definition,
                 sentence,
                 sentenceTr,
+                wordAudio: state.currentWordAudio,
                 audio: state.currentAudio,
                 image: state.currentImage,
                 createdAt: Date.now()
@@ -1300,7 +1368,7 @@
             const filterVerbType = document.getElementById('filter-verb-type')?.value;
 
             let filtered = state.vocabs.filter(v => {
-                if (state.mediaFilters.audio && !v.audio) return false;
+                if (state.mediaFilters.audio && !v.audio && !v.wordAudio) return false;
                 if (state.mediaFilters.image && !v.image) return false;
                 if (filterPos && v.pos !== filterPos) return false;
                 if (filterVerbType && v.verbType !== filterVerbType) return false;
@@ -1352,7 +1420,7 @@
                                             ${v.word}
                                             ${v.reading ? `<rt class="text-xs text-sakura-500 font-normal">${v.reading}</rt>` : ''}
                                         </ruby>
-                                        <button onclick="speakJapanese('${v.word}')" class="p-1 rounded-lg text-sakura-500 hover:bg-sakura-50 dark:hover:bg-sakura-900/30 transition-colors" title="發音">
+                                        <button onclick="playWordAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
                                             <i data-lucide="volume-2" class="w-4 h-4"></i>
                                         </button>
                                     </div>
@@ -1372,15 +1440,13 @@
                             </div>
 
                             ${v.sentence ? `
-                                <div class="mt-3 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50 flex items-start justify-between gap-2">
-                                    <div class="space-y-1.5 w-full">
+                                <div class="mt-3 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50 flex items-center justify-between gap-2">
+                                    <div class="space-y-1 w-full">
                                         <p class="text-xs text-slate-700 dark:text-slate-300 font-jp block leading-relaxed">${v.sentence}</p>${v.sentenceTr ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${v.sentenceTr}</p>` : ''}
                                     </div>
-                                    ${v.audio ? `
-                                        <button onclick="playVocabAudio('${v.id}')" class="p-1 rounded-lg text-sakura-500 hover:bg-sakura-100/50 transition-colors shrink-0 self-center" title="播放例句音訊">
-                                            <i data-lucide="music" class="w-4 h-4"></i>
-                                        </button>
-                                    ` : ''}
+                                    <button onclick="playSentenceAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
+                                        <i data-lucide="music" class="w-4 h-4"></i>
+                                    </button>
                                 </div>
                             ` : ''}
                         </div>
@@ -1407,7 +1473,7 @@
                             <div class="space-y-1 w-full">
                                 <div class="flex items-center gap-2">
                                     <span class="text-lg font-black text-slate-800 dark:text-slate-100 font-jp">${v.word}</span>
-                                    <button onclick="speakJapanese('${v.word}')" class="p-1 rounded-lg text-sakura-500 hover:bg-sakura-50 dark:hover:bg-sakura-900/30 transition-colors" title="發音">
+                                    <button onclick="playWordAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
                                         <i data-lucide="volume-2" class="w-4 h-4"></i>
                                     </button>
                                     ${v.reading ? `<span class="text-xs text-sakura-500 font-jp">${v.reading}</span>` : ''}
@@ -1416,15 +1482,13 @@
                                 <p class="text-xs font-bold text-slate-600 dark:text-slate-300">${v.definition}</p>
 
                                 ${v.sentence ? `
-                                    <div class="mt-2 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/50 flex items-start justify-between gap-2">
+                                    <div class="mt-2 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/50 flex items-center justify-between gap-2">
                                         <div class="space-y-1 w-full">
                                             <p class="text-xs text-slate-700 dark:text-slate-300 font-jp block leading-relaxed">${v.sentence}</p>${v.sentenceTr ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${v.sentenceTr}</p>` : ''}
                                         </div>
-                                        ${v.audio ? `
-                                            <button onclick="playVocabAudio('${v.id}')" class="p-1 rounded-lg text-sakura-500 hover:bg-sakura-100/50 transition-colors shrink-0 self-center" title="播放例句音訊">
-                                                <i data-lucide="music" class="w-4 h-4"></i>
-                                            </button>
-                                        ` : ''}
+                                        <button onclick="playSentenceAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
+                                            <i data-lucide="music" class="w-4 h-4"></i>
+                                        </button>
                                     </div>
                                 ` : ''}
                             </div>
@@ -1458,6 +1522,16 @@
 
             toggleVerbTypeVisibility('edit-pos', 'edit-verb-type-container');
 
+            if (v.wordAudio) {
+                state.editWordAudio = v.wordAudio;
+                document.getElementById('edit-word-audio-element').src = v.wordAudio;
+                document.getElementById('edit-word-audio-prompt').classList.add('hidden');
+                document.getElementById('edit-word-audio-preview-container').classList.remove('hidden');
+                document.getElementById('edit-word-audio-filename').textContent = '已保存音訊';
+            } else {
+                clearEditWordAudio();
+            }
+
             if (v.audio) {
                 state.editAudio = v.audio;
                 document.getElementById('edit-audio-element').src = v.audio;
@@ -1485,8 +1559,8 @@
             document.getElementById('edit-modal').classList.add('hidden');
         }
 
-        async function handleEditSubmit(e) {
-            e.preventDefault();
+        async function handleEditSubmit(event) {
+            event.preventDefault();
 
             const id = document.getElementById('edit-id').value;
             const target = state.vocabs.find(x => x.id === id);
@@ -1504,6 +1578,7 @@
                 definition: document.getElementById('edit-definition').value.trim(),
                 sentence: document.getElementById('edit-sentence').value.trim(),
                 sentenceTr: document.getElementById('edit-sentence-tr').value.trim(),
+                wordAudio: state.editWordAudio,
                 audio: state.editAudio,
                 image: state.editImage,
             };
@@ -1519,14 +1594,6 @@
                 await dbDelete(id);
                 await loadVocabs();
                 autoUploadToDriveAppData();
-            }
-        }
-
-        function playVocabAudio(id) {
-            const v = state.vocabs.find(x => x.id === id);
-            if (v && v.audio) {
-                const audio = new Audio(v.audio);
-                audio.play();
             }
         }
 
@@ -1713,9 +1780,14 @@
         function renderFullBackContent(cur) {
             return `
                 <div class="space-y-2.5 w-full max-w-md mx-auto text-center flex flex-col items-center justify-center">
-                    <ruby class="text-3xl sm:text-4xl font-black text-slate-800 dark:text-slate-100 font-jp text-center">
-                        ${cur.word} <rt class="text-xs text-sakura-500 font-medium">${cur.reading || ''}</rt>
-                    </ruby>
+                    <div class="flex items-center justify-center gap-2">
+                        <ruby class="text-3xl sm:text-4xl font-black text-slate-800 dark:text-slate-100 font-jp text-center">
+                            ${cur.word} <rt class="text-xs text-sakura-500 font-medium">${cur.reading || ''}</rt>
+                        </ruby>
+                        <button onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
+                            <i data-lucide="volume-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                     
                     ${cur.pos ? `
                         <div class="text-center">
@@ -1728,8 +1800,13 @@
                     <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-slate-100 leading-snug text-center">${cur.definition}</h3>
 
                     ${cur.sentence ? `
-                        <div class="w-full bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-700/50 space-y-1 text-center">
-                            <p class="text-xs text-slate-700 dark:text-slate-300 font-jp text-center block leading-relaxed">${cur.sentence}</p>${cur.sentenceTr ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 text-center font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${cur.sentenceTr}</p>` : ''}
+                        <div class="w-full bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-700/50 space-y-1 flex items-center justify-between gap-2">
+                            <div class="space-y-1 w-full text-left">
+                                <p class="text-xs text-slate-700 dark:text-slate-300 font-jp block leading-relaxed">${cur.sentence}</p>${cur.sentenceTr ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${cur.sentenceTr}</p>` : ''}
+                            </div>
+                            <button onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
+                                <i data-lucide="music" class="w-4 h-4"></i>
+                            </button>
                         </div>
                     ` : ''}
 
@@ -1762,26 +1839,28 @@
                     cardLabel.textContent = "正面：日文單詞與例句";
                     clickHint.textContent = "點擊卡片翻看背面釋義";
                     cardBody.innerHTML = `
-                        <div class="text-center w-full">
-                            <ruby class="text-4xl sm:text-5xl font-black text-slate-800 dark:text-slate-100 font-jp tracking-wide">
-                                ${cur.word} <rt class="text-base text-sakura-500 font-medium">${cur.reading || ''}</rt>
-                            </ruby>
-                            ${cur.sentence ? `<p class="text-sm font-jp text-slate-500 dark:text-slate-400 italic max-w-md mx-auto line-clamp-3 mt-4 text-center">${cur.sentence}</p>` : ''}
+                        <div class="text-center w-full space-y-3">
+                            <div class="flex items-center justify-center gap-2">
+                                <ruby class="text-4xl sm:text-5xl font-black text-slate-800 dark:text-slate-100 font-jp tracking-wide">
+                                    ${cur.word} <rt class="text-base text-sakura-500 font-medium">${cur.reading || ''}</rt>
+                                </ruby>
+                                <button onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="p-2 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
+                                    <i data-lucide="volume-2" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                            ${cur.sentence ? `
+                                <div class="flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-2xl max-w-md mx-auto">
+                                    <p class="text-xs font-jp text-slate-600 dark:text-slate-300 text-left">${cur.sentence}</p>
+                                    <button onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
+                                        <i data-lucide="music" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            ` : ''}
                         </div>
                     `;
                 } else {
                     cardLabel.textContent = "背面：釋義與詳細資訊";
                     clickHint.textContent = "點擊卡片返回正面";
-                    topRightActions.innerHTML = `
-                        <button onclick="speakJapanese('${cur.word}')" class="px-3 py-1.5 rounded-xl bg-sakura-50 text-sakura-600 hover:bg-sakura-100 text-xs font-bold flex items-center gap-1 transition-colors">
-                            <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> 單詞音訊
-                        </button>
-                        ${cur.audio ? `
-                            <button onclick="playVocabAudio('${cur.id}')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 text-xs font-bold flex items-center gap-1 transition-colors">
-                                <i data-lucide="music" class="w-3.5 h-3.5 text-sakura-500"></i> 例句音訊
-                            </button>
-                        ` : ''}
-                    `;
                     cardBody.innerHTML = renderFullBackContent(cur);
                 }
             } else if (state.fcMode === 'chinese_front') {
@@ -1812,16 +1891,6 @@
                 } else {
                     cardLabel.textContent = "第三頁：完整解答與欄位資訊";
                     clickHint.textContent = "點擊重頭開始 (返回第一頁)";
-                    topRightActions.innerHTML = `
-                        <button onclick="speakJapanese('${cur.word}')" class="px-3 py-1.5 rounded-xl bg-sakura-50 text-sakura-600 hover:bg-sakura-100 text-xs font-bold flex items-center gap-1 transition-colors">
-                            <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> 單詞音訊
-                        </button>
-                        ${cur.audio ? `
-                            <button onclick="playVocabAudio('${cur.id}')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 text-xs font-bold flex items-center gap-1 transition-colors">
-                                <i data-lucide="music" class="w-3.5 h-3.5 text-sakura-500"></i> 例句音訊
-                            </button>
-                        ` : ''}
-                    `;
                     cardBody.innerHTML = renderFullBackContent(cur);
                 }
             } else if (state.fcMode === 'audio_only') {
@@ -1830,12 +1899,12 @@
                     clickHint.textContent = "點擊卡片翻看背面解答";
                     cardBody.innerHTML = `
                         <div class="space-y-4 text-center">
-                            <button onclick="event.stopPropagation(); speakJapanese('${cur.word}')" class="px-6 py-3 rounded-2xl bg-sakura-500 hover:bg-sakura-600 text-white font-bold text-sm shadow-lg flex items-center gap-2 mx-auto">
+                            <button onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="px-6 py-3 rounded-2xl bg-sakura-500 hover:bg-sakura-600 text-white font-bold text-sm shadow-lg flex items-center gap-2 mx-auto">
                                 <i data-lucide="volume-2" class="w-5 h-5"></i> 播放日文單詞音訊
                             </button>
-                            ${cur.audio ? `
-                                <button onclick="event.stopPropagation(); playVocabAudio('${cur.id}')" class="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 font-bold text-xs flex items-center gap-2 mx-auto">
-                                    <i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 播放例句聲音
+                            ${cur.sentence ? `
+                                <button onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 font-bold text-xs flex items-center gap-2 mx-auto">
+                                    <i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 播放例句音訊
                                 </button>
                             ` : ''}
                         </div>
@@ -1843,16 +1912,6 @@
                 } else {
                     cardLabel.textContent = "背面：完整解答與欄位資訊";
                     clickHint.textContent = "點擊卡片返回正面";
-                    topRightActions.innerHTML = `
-                        <button onclick="speakJapanese('${cur.word}')" class="px-3 py-1.5 rounded-xl bg-sakura-50 text-sakura-600 hover:bg-sakura-100 text-xs font-bold flex items-center gap-1 transition-colors">
-                            <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> 單詞音訊
-                        </button>
-                        ${cur.audio ? `
-                            <button onclick="playVocabAudio('${cur.id}')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 text-xs font-bold flex items-center gap-1 transition-colors">
-                                <i data-lucide="music" class="w-3.5 h-3.5 text-sakura-500"></i> 例句音訊
-                            </button>
-                        ` : ''}
-                    `;
                     cardBody.innerHTML = renderFullBackContent(cur);
                 }
             }
@@ -1887,8 +1946,8 @@
             dl.remove();
         }
 
-        function importBackupJSON(e) {
-            const file = e.target.files[0];
+        function importBackupJSON(event) {
+            const file = event.target.files[0];
             if (!file) return;
             const r = new FileReader();
             r.onload = async (ev) => {
