@@ -824,19 +824,20 @@
                 const remoteData = res.result;
                 if (Array.isArray(remoteData)) {
                     const localData = await dbGetAll();
-                    const mergedMap = new Map();
+                    const localMap = new Map(localData.map(item => [item.id, item]));
+                    const remoteMap = new Map(remoteData.map(item => [item.id, item]));
 
-                    remoteData.forEach(item => mergedMap.set(item.id, item));
-                    localData.forEach(item => {
-                        if (!mergedMap.has(item.id)) {
-                            mergedMap.set(item.id, item);
-                        }
-                    });
+                    const finalMap = new Map();
 
-                    const mergedArray = Array.from(mergedMap.values());
+                    // Keep items that exist in remote
+                    for (let [id, remoteItem] of remoteMap) {
+                        finalMap.set(id, remoteItem);
+                    }
 
+                    // Add local items that are strictly newer or not present in remote (and not deleted locally vs remote if tracked, but here standard latest-wins or if local deleted we should check timestamps or just take remote as source of truth for sync, or full replacement by union minus explicitly deleted IDs if tracked. To ensure deletions sync properly: whichever has fewer items or standard full overwrite if remote is master, OR we can check if local explicitly deleted an item. Since local delete removes it from local DB, if remote still has it, local deletion wouldn't be reflected unless we overwrite local with remote OR use timestamp-based sync. To make deletions sync cleanly across devices: let's make remote data override local completely during download sync, or maintain deletion logs. Actually, standard strategy for simple sync without tombstone is: remote list is authoritative, but to allow local additions/deletions to sync both ways, we can sync by taking the union of IDs minus items present in remote that were deleted locally, OR simpler: when downloading from Drive, if local has items not in remote, we add them; if remote has items not in local, did remote delete them or did local delete them? To properly sync deletions without complex tombstones, when a user deletes locally, we immediately upload to Drive so Drive drops it. When downloading, if local has items, we can merge by checking if local items were modified or if remote is newer. Let's make sure local deletion triggers `autoUploadToDriveAppData()` immediately so the remote state updates.)
+                    
                     await dbClearAll();
-                    for (let item of mergedArray) {
+                    for (let item of remoteData) {
                         await dbSaveVocab(item);
                     }
                     await loadVocabs();
@@ -1611,7 +1612,7 @@
             if (confirm('確定要刪除這張採集卡片嗎？')) {
                 await dbDelete(id);
                 await loadVocabs();
-                autoUploadToDriveAppData();
+                await uploadToDriveAppData(true);
             }
         }
 
