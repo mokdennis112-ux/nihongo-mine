@@ -227,7 +227,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
-                                <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 單詞音訊 (Word Audio)</span>
+                                <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 單詞音訊 (WORD AUDIO)</span>
                                 <span id="word-audio-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
                             </label>
                             <div id="drop-zone-word-audio" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
@@ -247,7 +247,7 @@
 
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
-                                <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 例句音訊 (Sentence Audio)</span>
+                                <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 例句音訊 (SENTENCE AUDIO)</span>
                                 <span id="audio-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
                             </label>
                             
@@ -270,7 +270,7 @@
 
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
-                                <span class="flex items-center gap-1.5"><i data-lucide="image" class="w-4 h-4 text-sakura-500"></i> 參考截圖 (Photo)</span>
+                                <span class="flex items-center gap-1.5"><i data-lucide="image" class="w-4 h-4 text-sakura-500"></i> 參考截圖 (PHOTO)</span>
                                 <span id="image-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
                             </label>
 
@@ -306,12 +306,12 @@
         <div id="view-gallery" class="tab-view hidden space-y-6">
             <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200/80 dark:border-slate-700/80 space-y-4">
                 <div class="flex flex-col lg:flex-row items-center gap-3">
-                    <div class="relative w-full lg:w-1/4">
+                    <div class="relative w-full lg:w-1/3">
                         <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5"></i>
                         <input type="text" id="search-input" oninput="renderGallery()" placeholder="搜尋單詞、釋義或例句..." class="w-full pl-12 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sakura-500/50">
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-2 w-full lg:w-3/4 justify-between lg:justify-end">
+                    <div class="flex flex-wrap items-center gap-2 w-full lg:w-2/3 justify-between lg:justify-end">
                         <div class="flex items-center gap-1.5">
                             <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
                             <input type="date" id="filter-date" lang="en-GB" onchange="renderGallery()" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
@@ -339,15 +339,6 @@
                             </button>
                             <button id="view-mode-list" onclick="setGalleryViewMode('list')" class="p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 transition-all" title="列表檢視">
                                 <i data-lucide="list" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-
-                        <div class="flex items-center gap-1.5">
-                            <button id="filter-audio-btn" onclick="toggleMediaFilter('audio')" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 hover:bg-slate-100 dark:hover:bg-slate-700">
-                                <i data-lucide="music" class="w-3.5 h-3.5 text-sakura-500"></i> 有音訊
-                            </button>
-                            <button id="filter-image-btn" onclick="toggleMediaFilter('image')" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 hover:bg-slate-100 dark:hover:bg-slate-700">
-                                <i data-lucide="image" class="w-3.5 h-3.5 text-rose-500"></i> 有截圖
                             </button>
                         </div>
                     </div>
@@ -541,25 +532,43 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 單詞音訊</span>
+                            <span id="edit-word-audio-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
+                        </label>
+                        <div id="edit-drop-zone-word-audio" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
+                            <input type="file" id="edit-file-word-audio" accept="audio/*" onchange="handleEditWordAudioUpload(event)" class="hidden">
+                            <div id="edit-word-audio-preview-container" class="hidden space-y-2">
+                                <audio id="edit-word-audio-element" controls class="w-full h-8 max-w-full"></audio>
+                                <button type="button" onclick="clearEditWordAudio(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除
+                                </button>
+                            </div>
+                            <div id="edit-word-audio-prompt" onclick="document.getElementById('edit-file-word-audio').click()" class="py-2">
+                                <i data-lucide="upload-cloud" class="w-5 h-5 mx-auto text-slate-400 mb-1"></i>
+                                <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">選擇音訊</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="space-y-2">
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
                             <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 例句音訊</span>
-                            <span id="edit-audio-filename" class="text-[10px] text-slate-400 font-mono">未選擇檔案</span>
+                            <span id="edit-audio-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
                         </label>
                         <div id="edit-drop-zone-audio" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
                             <input type="file" id="edit-file-audio" accept="audio/*" onchange="handleEditAudioUpload(event)" class="hidden">
-                            
                             <div id="edit-audio-preview-container" class="hidden space-y-2">
                                 <audio id="edit-audio-element" controls class="w-full h-8 max-w-full"></audio>
                                 <button type="button" onclick="clearEditAudio(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
-                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除音訊
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除
                                 </button>
                             </div>
-
                             <div id="edit-audio-prompt" onclick="document.getElementById('edit-file-audio').click()" class="py-2">
-                                <i data-lucide="upload-cloud" class="w-6 h-6 mx-auto text-slate-400 mb-1"></i>
-                                <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">點擊選擇 或 拖放音訊</p>
+                                <i data-lucide="upload-cloud" class="w-5 h-5 mx-auto text-slate-400 mb-1"></i>
+                                <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">選擇音訊</p>
                             </div>
                         </div>
                     </div>
@@ -567,21 +576,19 @@
                     <div class="space-y-2">
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase flex items-center justify-between">
                             <span class="flex items-center gap-1.5"><i data-lucide="image" class="w-4 h-4 text-sakura-500"></i> 參考截圖</span>
-                            <span id="edit-image-filename" class="text-[10px] text-slate-400 font-mono">未選擇檔案</span>
+                            <span id="edit-image-filename" class="text-[10px] text-slate-400 font-mono">選填</span>
                         </label>
                         <div id="edit-drop-zone-image" class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-sakura-400 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl p-3 text-center transition-all cursor-pointer">
                             <input type="file" id="edit-file-image" accept="image/*" onchange="handleEditImageUpload(event)" class="hidden">
-                            
                             <div id="edit-image-preview-container" class="hidden space-y-2">
-                                <img id="edit-image-element" src="" class="max-h-24 mx-auto rounded-xl shadow-md border border-slate-200 dark:border-slate-700 object-cover">
+                                <img id="edit-image-element" src="" class="max-h-20 mx-auto rounded-xl shadow-md border border-slate-200 dark:border-slate-700 object-cover">
                                 <button type="button" onclick="clearEditImage(event)" class="text-xs text-rose-500 font-semibold hover:underline flex items-center justify-center gap-1 mx-auto">
-                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除截圖
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 移除
                                 </button>
                             </div>
-
                             <div id="edit-image-prompt" onclick="document.getElementById('edit-file-image').click()" class="py-2">
-                                <i data-lucide="camera" class="w-6 h-6 mx-auto text-slate-400 mb-1"></i>
-                                <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">點擊選擇、拖放 或 Ctrl+V 貼上</p>
+                                <i data-lucide="camera" class="w-5 h-5 mx-auto text-slate-400 mb-1"></i>
+                                <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">選擇或貼上</p>
                             </div>
                         </div>
                     </div>
@@ -1053,7 +1060,6 @@
             vocabs: [],
             currentTab: 'add',
             galleryViewMode: 'grid',
-            mediaFilters: { audio: false, image: false },
             currentWordAudio: null,
             currentAudio: null,
             currentImage: null,
@@ -1117,6 +1123,31 @@
                     }
                 }
             });
+
+            // Image drop zone handling
+            const imageZone = document.getElementById('drop-zone-image');
+            if (imageZone) {
+                imageZone.addEventListener('dragover', (e) => { e.preventDefault(); imageZone.classList.add('border-sakura-500'); });
+                imageZone.addEventListener('dragleave', () => imageZone.classList.remove('border-sakura-500'));
+                imageZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    imageZone.classList.remove('border-sakura-500');
+                    const files = e.dataTransfer.files;
+                    if (files.length && files[0].type.startsWith('image/')) processImageFile(files[0]);
+                });
+            }
+
+            const editImageZone = document.getElementById('edit-drop-zone-image');
+            if (editImageZone) {
+                editImageZone.addEventListener('dragover', (e) => { e.preventDefault(); editImageZone.classList.add('border-sakura-500'); });
+                editImageZone.addEventListener('dragleave', () => editImageZone.classList.remove('border-sakura-500'));
+                editImageZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    editImageZone.classList.remove('border-sakura-500');
+                    const files = e.dataTransfer.files;
+                    if (files.length && files[0].type.startsWith('image/')) processEditImageFile(files[0]);
+                });
+            }
         }
 
         function processWordAudioFile(file) {
@@ -1178,7 +1209,7 @@
                 document.getElementById('image-element').src = state.currentImage;
                 document.getElementById('image-prompt').classList.add('hidden');
                 document.getElementById('image-preview-container').classList.remove('hidden');
-                document.getElementById('image-filename').textContent = '剪貼簿貼上圖片';
+                document.getElementById('image-filename').textContent = file.name;
             };
             r.readAsDataURL(file);
         }
@@ -1256,7 +1287,7 @@
                 document.getElementById('edit-image-element').src = state.editImage;
                 document.getElementById('edit-image-prompt').classList.add('hidden');
                 document.getElementById('edit-image-preview-container').classList.remove('hidden');
-                document.getElementById('edit-image-filename').textContent = '剪貼簿貼上圖片';
+                document.getElementById('edit-image-filename').textContent = file.name;
             };
             r.readAsDataURL(file);
         }
@@ -1350,17 +1381,6 @@
             renderGallery();
         }
 
-        function toggleMediaFilter(type) {
-            state.mediaFilters[type] = !state.mediaFilters[type];
-            const btn = document.getElementById(`filter-${type}-btn`);
-            if (state.mediaFilters[type]) {
-                btn.classList.add('bg-sakura-50', 'dark:bg-sakura-900/40', 'border-sakura-300', 'text-sakura-600');
-            } else {
-                btn.classList.remove('bg-sakura-50', 'dark:bg-sakura-900/40', 'border-sakura-300', 'text-sakura-600');
-            }
-            renderGallery();
-        }
-
         function renderGallery() {
             const query = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
             const filterDate = document.getElementById('filter-date')?.value;
@@ -1368,8 +1388,6 @@
             const filterVerbType = document.getElementById('filter-verb-type')?.value;
 
             let filtered = state.vocabs.filter(v => {
-                if (state.mediaFilters.audio && !v.audio && !v.wordAudio) return false;
-                if (state.mediaFilters.image && !v.image) return false;
                 if (filterPos && v.pos !== filterPos) return false;
                 if (filterVerbType && v.verbType !== filterVerbType) return false;
                 if (filterDate) {
@@ -1403,12 +1421,12 @@
                 container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5";
                 container.innerHTML = filtered.map(v => `
                     <div class="group bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col justify-between space-y-3 relative">
-                        <div class="absolute top-3.5 right-3.5 flex items-center gap-1.5 z-10 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200">
-                            <button onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg shadow-sm" title="編輯">
-                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                        <div class="absolute top-3.5 right-3.5 flex items-center gap-1.5 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-md" title="編輯">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
                             </button>
-                            <button onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg shadow-sm" title="刪除">
-                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-md" title="刪除">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
 
@@ -1420,7 +1438,7 @@
                                             ${v.word}
                                             ${v.reading ? `<rt class="text-xs text-sakura-500 font-normal">${v.reading}</rt>` : ''}
                                         </ruby>
-                                        <button onclick="playWordAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
+                                        <button type="button" onclick="playWordAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
                                             <i data-lucide="volume-2" class="w-4 h-4"></i>
                                         </button>
                                     </div>
@@ -1444,7 +1462,7 @@
                                     <div class="space-y-1 w-full">
                                         <p class="text-xs text-slate-700 dark:text-slate-300 font-jp block leading-relaxed">${v.sentence}</p>${v.sentenceTr ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${v.sentenceTr}</p>` : ''}
                                     </div>
-                                    <button onclick="playSentenceAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
+                                    <button type="button" onclick="playSentenceAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
                                         <i data-lucide="music" class="w-4 h-4"></i>
                                     </button>
                                 </div>
@@ -1460,20 +1478,20 @@
                 container.className = "space-y-3";
                 container.innerHTML = filtered.map(v => `
                     <div class="group bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
-                        <div class="absolute top-2.5 right-3 flex items-center gap-1 z-10 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200">
-                            <button onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg shadow-sm" title="編輯">
-                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                        <div class="absolute top-2.5 right-3 flex items-center gap-1.5 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-md" title="編輯">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
                             </button>
-                            <button onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg shadow-sm" title="刪除">
-                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-md" title="刪除">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
 
-                        <div class="flex items-start sm:items-center gap-3 pr-8 flex-grow">
+                        <div class="flex items-start sm:items-center gap-3 pr-16 flex-grow">
                             <div class="space-y-1 w-full">
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 flex-wrap">
                                     <span class="text-lg font-black text-slate-800 dark:text-slate-100 font-jp">${v.word}</span>
-                                    <button onclick="playWordAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
+                                    <button type="button" onclick="playWordAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
                                         <i data-lucide="volume-2" class="w-4 h-4"></i>
                                     </button>
                                     ${v.reading ? `<span class="text-xs text-sakura-500 font-jp">${v.reading}</span>` : ''}
@@ -1486,7 +1504,7 @@
                                         <div class="space-y-1 w-full">
                                             <p class="text-xs text-slate-700 dark:text-slate-300 font-jp block leading-relaxed">${v.sentence}</p>${v.sentenceTr ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${v.sentenceTr}</p>` : ''}
                                         </div>
-                                        <button onclick="playSentenceAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
+                                        <button type="button" onclick="playSentenceAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
                                             <i data-lucide="music" class="w-4 h-4"></i>
                                         </button>
                                     </div>
@@ -1784,7 +1802,7 @@
                         <ruby class="text-3xl sm:text-4xl font-black text-slate-800 dark:text-slate-100 font-jp text-center">
                             ${cur.word} <rt class="text-xs text-sakura-500 font-medium">${cur.reading || ''}</rt>
                         </ruby>
-                        <button onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
+                        <button type="button" onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
                             <i data-lucide="volume-2" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -1804,7 +1822,7 @@
                             <div class="space-y-1 w-full text-left">
                                 <p class="text-xs text-slate-700 dark:text-slate-300 font-jp block leading-relaxed">${cur.sentence}</p>${cur.sentenceTr ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 font-sans block leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-1">${cur.sentenceTr}</p>` : ''}
                             </div>
-                            <button onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
+                            <button type="button" onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
                                 <i data-lucide="music" class="w-4 h-4"></i>
                             </button>
                         </div>
@@ -1844,14 +1862,14 @@
                                 <ruby class="text-4xl sm:text-5xl font-black text-slate-800 dark:text-slate-100 font-jp tracking-wide">
                                     ${cur.word} <rt class="text-base text-sakura-500 font-medium">${cur.reading || ''}</rt>
                                 </ruby>
-                                <button onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="p-2 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
+                                <button type="button" onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="p-2 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
                                     <i data-lucide="volume-2" class="w-5 h-5"></i>
                                 </button>
                             </div>
                             ${cur.sentence ? `
                                 <div class="flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-2xl max-w-md mx-auto">
                                     <p class="text-xs font-jp text-slate-600 dark:text-slate-300 text-left">${cur.sentence}</p>
-                                    <button onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
+                                    <button type="button" onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shrink-0 shadow-sm" title="例句發音">
                                         <i data-lucide="music" class="w-4 h-4"></i>
                                     </button>
                                 </div>
@@ -1878,10 +1896,10 @@
                             <canvas id="hw-card-canvas" width="460" height="230" class="w-full max-w-lg border-2 border-dashed border-sakura-300 dark:border-slate-600 rounded-2xl bg-slate-50 dark:bg-slate-900 touch-none cursor-crosshair shadow-inner"></canvas>
                             
                             <div class="flex items-center gap-2">
-                                <button onclick="clearCardCanvas(event)" class="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-xs text-rose-500 font-bold hover:bg-slate-200 transition-colors">
+                                <button type="button" onclick="clearCardCanvas(event)" class="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-xs text-rose-500 font-bold hover:bg-slate-200 transition-colors">
                                     清除畫板
                                 </button>
-                                <button onclick="openCanvasModal(event)" class="px-3.5 py-1.5 rounded-xl bg-sakura-500 text-xs text-white font-bold hover:bg-sakura-600 transition-colors flex items-center gap-1 shadow-sm">
+                                <button type="button" onclick="openCanvasModal(event)" class="px-3.5 py-1.5 rounded-xl bg-sakura-500 text-xs text-white font-bold hover:bg-sakura-600 transition-colors flex items-center gap-1 shadow-sm">
                                     <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> 放大全螢幕手寫
                                 </button>
                             </div>
@@ -1899,11 +1917,11 @@
                     clickHint.textContent = "點擊卡片翻看背面解答";
                     cardBody.innerHTML = `
                         <div class="space-y-4 text-center">
-                            <button onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="px-6 py-3 rounded-2xl bg-sakura-500 hover:bg-sakura-600 text-white font-bold text-sm shadow-lg flex items-center gap-2 mx-auto">
+                            <button type="button" onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="px-6 py-3 rounded-2xl bg-sakura-500 hover:bg-sakura-600 text-white font-bold text-sm shadow-lg flex items-center gap-2 mx-auto">
                                 <i data-lucide="volume-2" class="w-5 h-5"></i> 播放日文單詞音訊
                             </button>
                             ${cur.sentence ? `
-                                <button onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 font-bold text-xs flex items-center gap-2 mx-auto">
+                                <button type="button" onclick="event.stopPropagation(); playSentenceAudio('${cur.id}')" class="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 font-bold text-xs flex items-center gap-2 mx-auto">
                                     <i data-lucide="music" class="w-4 h-4 text-sakura-500"></i> 播放例句音訊
                                 </button>
                             ` : ''}
