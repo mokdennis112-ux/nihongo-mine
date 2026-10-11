@@ -73,6 +73,31 @@
         input[type="date"] {
             font-family: inherit;
         }
+
+        /* 讓按鈕群組預設完全隱透明且不阻擋點擊，只有當鼠標懸停於按鈕群組本身時才顯示 */
+        .action-btns-group {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .action-btns-group:hover {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        /* 當父層卡片 hover 時，只讓按鈕群組的容器允許被 hover 觸發（但子按鈕本身 hover 時才顯示） */
+        .group:hover .action-btns-group {
+            pointer-events: auto;
+        }
+        .action-btns-group button {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .action-btns-group:hover button {
+            opacity: 0.85;
+        }
+        .action-btns-group button:hover {
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-japan-900 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col transition-colors duration-300 sakura-pattern">
@@ -1415,7 +1440,8 @@
                            (v.pos || '').toLowerCase().includes(query) ||
                            v.definition.toLowerCase().includes(query) ||
                            (v.sentence || '').toLowerCase().includes(query) ||
-                           (v.sentenceTr || '').toLowerCase().includes(query);
+                           (v.sentenceTr || '').toLowerCase().includes(query) ||
+                           (v.remarks || '').toLowerCase().includes(query);
                 }
                 return true;
             });
@@ -1436,12 +1462,12 @@
                 container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5";
                 container.innerHTML = filtered.map(v => `
                     <div class="group bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col justify-between space-y-3 relative">
-                        <div class="absolute top-2 right-2 flex items-center gap-1 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-md shadow-sm" title="編輯">
-                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                        <div class="absolute top-1 right-1 flex items-center gap-0.5 z-20 action-btns-group">
+                            <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-0.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded shadow-sm" title="編輯">
+                                <i data-lucide="edit-3" class="w-2.5 h-2.5"></i>
                             </button>
-                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-md shadow-sm" title="刪除">
-                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            <button type="button" onclick="deleteEntry('${v.id}')" class="text-slate-400 hover:text-rose-500 transition-colors p-0.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded shadow-sm" title="刪除">
+                                <i data-lucide="trash-2" class="w-2.5 h-2.5"></i>
                             </button>
                         </div>
 
@@ -1482,6 +1508,11 @@
                                     </button>
                                 </div>
                             ` : ''}
+                            ${v.remarks ? `
+                                <div class="mt-2 text-xs text-slate-500 dark:text-slate-400 truncate">
+                                    <span class="font-bold">備忘：</span><a href="${v.remarks}" target="_blank" class="text-sakura-500 hover:underline">${v.remarks}</a>
+                                </div>
+                            ` : ''}
                         </div>
 
                         <div class="pt-2 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-end">
@@ -1493,7 +1524,7 @@
                 container.className = "space-y-3";
                 container.innerHTML = filtered.map(v => `
                     <div class="group bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
-                        <div class="absolute top-1 right-1 flex items-center gap-0.5 z-20 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div class="absolute top-1 right-1 flex items-center gap-0.5 z-20 action-btns-group">
                             <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-0.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded shadow-sm" title="編輯">
                                 <i data-lucide="edit-3" class="w-2.5 h-2.5"></i>
                             </button>
@@ -1523,6 +1554,11 @@
                                         <i data-lucide="music" class="w-4 h-4"></i>
                                     </button>
                                 </div>
+                                ${v.remarks ? `
+                                    <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                        <span class="font-bold">備忘：</span><a href="${v.remarks}" target="_blank" class="text-sakura-500 hover:underline">${v.remarks}</a>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
 
