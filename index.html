@@ -2237,7 +2237,7 @@
         function prevFlashcard() {
             if (state.fcIndex > 0) state.fcIndex--;
             else state.fcIndex = state.fcDeck.length - 1;
-            state.fcPageStep = 1;
+            state.fcPageStep = state.fcMode === 'chinese_front' ? 3 : 2;
             updateFlashcard();
         }
 
