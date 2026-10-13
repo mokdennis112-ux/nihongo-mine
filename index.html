@@ -723,7 +723,10 @@
             if (savedToken) {
                 gapi.client.setToken({ access_token: savedToken });
                 updateSyncBtnUI(true);
-                await downloadAndMergeFromDriveAppData(true);
+                await enqueueOp(async () => {
+                    await downloadAndMergeFromDriveAppData(true);
+                    if (pendingCloudSync) await pushToDriveSilently();
+                });
             }
         }
 
@@ -746,6 +749,57 @@
             alert('已成功登出 Google 帳號！');
         }
 
+        let opChain = Promise.resolve();
+        let pendingCloudSync = false;
+
+        function enqueueOp(fn) {
+            const run = opChain.then(fn, fn);
+            opChain = run.then(() => {}, () => {});
+            return run;
+        }
+
+        function setSyncLabel(text) {
+            const btnText = document.getElementById('sync-btn-text');
+            if (btnText) btnText.textContent = text;
+        }
+
+        async function pushToDriveSilently() {
+            const token = localStorage.getItem('gdrive_token');
+            if (!token) return;
+            if (!gapiInited || !window.gapi || !gapi.client) {
+                pendingCloudSync = true;
+                return;
+            }
+            gapi.client.setToken({ access_token: token });
+            setSyncLabel('同步中...');
+            try {
+                const ok = await uploadToDriveAppData(true);
+                if (ok) {
+                    pendingCloudSync = false;
+                    setSyncLabel('已同步');
+                    setTimeout(() => {
+                        if (localStorage.getItem('gdrive_token')) setSyncLabel('已連線 Google Drive');
+                    }, 1200);
+                } else if (localStorage.getItem('gdrive_token')) {
+                    pendingCloudSync = true;
+                    setSyncLabel('同步失敗，將再試');
+                }
+            } catch (err) {
+                pendingCloudSync = true;
+                console.error('Immediate sync failed:', err);
+                setSyncLabel('同步失敗，將再試');
+            }
+        }
+
+        function saveAndSync(mutator) {
+            if (localStorage.getItem('gdrive_token')) pendingCloudSync = true;
+            return enqueueOp(async () => {
+                await mutator();
+                await loadVocabs();
+                await pushToDriveSilently();
+            });
+        }
+
         async function syncToGoogleDrive() {
             if (!gapiInited || !gsisInited) {
                 alert('Google API 仍在載入中，請稍候再試...');
@@ -759,8 +813,11 @@
                 updateSyncBtnUI(true);
                 
                 try {
-                    await downloadAndMergeFromDriveAppData(false);
-                    await uploadToDriveAppData(false);
+                    await enqueueOp(async () => {
+                        gapi.client.setToken({ access_token: savedToken });
+                        await downloadAndMergeFromDriveAppData(false);
+                        await uploadToDriveAppData(false);
+                    });
                     return;
                 } catch (err) {
                     console.warn('Token 已失效，重新請求授權...', err);
@@ -779,19 +836,19 @@
                     gapi.client.setToken({ access_token: resp.access_token });
                     updateSyncBtnUI(true);
                 }
-                await downloadAndMergeFromDriveAppData(false);
-                await uploadToDriveAppData(false);
+                await enqueueOp(async () => {
+                    await downloadAndMergeFromDriveAppData(false);
+                    await uploadToDriveAppData(false);
+                });
             };
 
             tokenClient.requestAccessToken({ prompt: '' });
         }
 
         async function autoUploadToDriveAppData() {
-            const savedToken = localStorage.getItem('gdrive_token');
-            if (!savedToken || !gapiInited) return;
-
-            gapi.client.setToken({ access_token: savedToken });
-            await uploadToDriveAppData(true);
+            if (!localStorage.getItem('gdrive_token')) return;
+            pendingCloudSync = true;
+            return enqueueOp(() => pushToDriveSilently());
         }
 
         async function uploadToDriveAppData(isSilent = false) {
@@ -816,7 +873,7 @@
                 };
 
                 const currentTokenObj = gapi.client.getToken();
-                if (!currentTokenObj || !currentTokenObj.access_token) return;
+                if (!currentTokenObj || !currentTokenObj.access_token) return false;
 
                 const accessToken = currentTokenObj.access_token;
                 const form = new FormData();
@@ -836,7 +893,12 @@
                 if (res.status === 401) {
                     localStorage.removeItem('gdrive_token');
                     updateSyncBtnUI(false);
-                    return;
+                    return false;
+                }
+
+                if (!res.ok) {
+                    const detail = await res.text().catch(() => '');
+                    throw new Error(detail || ('Drive upload failed: ' + res.status));
                 }
 
                 if (!isSilent) {
@@ -844,6 +906,7 @@
                 } else {
                     console.log('背景自動同步成功！');
                 }
+                return true;
             } catch (err) {
                 console.error('Upload to Drive error:', err);
                 throw err;
@@ -874,12 +937,16 @@
                 if (Array.isArray(remoteData)) {
                     const localData = await dbGetAll();
                     const merged = mergeVocabLists(localData, remoteData);
-                    await dbClearAll();
-                    for (let item of merged) {
-                        await dbSaveVocab(item);
+                    const localSame = vocabSnapshot(merged) === vocabSnapshot(localData);
+                    const remoteSame = vocabSnapshot(merged) === vocabSnapshot(remoteData);
+                    if (!localSame) {
+                        await dbClearAll();
+                        for (let item of merged) {
+                            await dbSaveVocab(item);
+                        }
+                        await loadVocabs();
                     }
-                    await loadVocabs();
-                    if (vocabSnapshot(merged) !== vocabSnapshot(remoteData)) {
+                    if (!remoteSame) {
                         await uploadToDriveAppData(true);
                     }
                 }
@@ -1180,7 +1247,31 @@
                     }
                 }
             });
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') pullCloudNow();
+            });
+            window.addEventListener('online', () => {
+                if (pendingCloudSync) autoUploadToDriveAppData();
+                else pullCloudNow();
+            });
+            setInterval(() => {
+                if (document.visibilityState === 'visible') pullCloudNow();
+            }, 20000);
         });
+
+        function pullCloudNow() {
+            if (!gapiInited || !localStorage.getItem('gdrive_token')) return;
+            return enqueueOp(async () => {
+                try {
+                    gapi.client.setToken({ access_token: localStorage.getItem('gdrive_token') });
+                    await downloadAndMergeFromDriveAppData(true);
+                    if (pendingCloudSync) await pushToDriveSilently();
+                } catch (err) {
+                    console.error('Cloud pull failed:', err);
+                }
+            });
+        }
 
         async function loadVocabs() {
             const list = await dbGetAll();
@@ -1517,12 +1608,12 @@
                 updatedAt: Date.now()
             };
 
-            await dbSaveVocab(entry);
-            await loadVocabs();
+            await saveAndSync(async () => {
+                await dbSaveVocab(entry);
+            });
             clearForm();
 
             if (typeof confetti === 'function') confetti({ particleCount: 35, spread: 50 });
-            autoUploadToDriveAppData();
             switchTab('gallery');
         }
 
@@ -1787,9 +1878,9 @@
                 createdAt: now,
                 updatedAt: now
             };
-            await dbSaveVocab(copy);
-            await loadVocabs();
-            autoUploadToDriveAppData();
+            await saveAndSync(async () => {
+                await dbSaveVocab(copy);
+            });
         }
 
         /* EDIT MODAL FUNCTIONS */
@@ -1874,25 +1965,25 @@
                 updatedAt: Date.now(),
             };
 
-            await dbSaveVocab(updatedEntry);
-            await loadVocabs();
+            await saveAndSync(async () => {
+                await dbSaveVocab(updatedEntry);
+            });
             closeEditModal();
-            autoUploadToDriveAppData();
         }
 
         async function deleteEntry(id) {
             if (confirm('確定要刪除這張採集卡片嗎？')) {
                 const existing = state.vocabs.find(x => x.id === id);
-                await dbSaveVocab({
-                    id,
-                    word: existing ? existing.word : '',
-                    definition: existing ? existing.definition : '',
-                    createdAt: existing ? existing.createdAt : Date.now(),
-                    updatedAt: Date.now(),
-                    deleted: true
+                await saveAndSync(async () => {
+                    await dbSaveVocab({
+                        id,
+                        word: existing ? existing.word : '',
+                        definition: existing ? existing.definition : '',
+                        createdAt: existing ? existing.createdAt : Date.now(),
+                        updatedAt: Date.now(),
+                        deleted: true
+                    });
                 });
-                await loadVocabs();
-                await uploadToDriveAppData(true);
             }
         }
 
@@ -2262,9 +2353,14 @@
                 try {
                     const list = JSON.parse(ev.target.result);
                     if (Array.isArray(list)) {
-                        for (let item of list) await dbSaveVocab(item);
-                        await loadVocabs();
-                        autoUploadToDriveAppData();
+                        const now = Date.now();
+                        await saveAndSync(async () => {
+                            for (let item of list) {
+                                if (!item || !item.id) continue;
+                                if (!item.updatedAt) item.updatedAt = now;
+                                await dbSaveVocab(item);
+                            }
+                        });
                         alert(`成功匯入 ${list.length} 個生字卡片！`);
                         closeBackupModal();
                     }
