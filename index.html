@@ -214,7 +214,7 @@
                                 <option value="形容詞">形容詞 (い形)</option>
                                 <option value="形容動詞">形容動詞 (な形)</option>
                                 <option value="助詞">助詞</option>
-<option value="片語/短句">片語/短句</option>
+                                <option value="片語/短句">片語/短句</option>
                             </select>
                         </div>
                         <div id="verb-type-container" class="hidden">
@@ -359,8 +359,8 @@
                             <option value="動詞">動詞</option>
                             <option value="形容詞">形容詞 (い形)</option>
                             <option value="形容動詞">形容動詞 (な形)</option>
-                                <option value="助詞">助詞</option>
-<option value="片語/短句">片語/短句</option>
+                            <option value="助詞">助詞</option>
+                            <option value="片語/短句">片語/短句</option>
                         </select>
 
                         <select id="filter-verb-type" onchange="renderGallery()" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
@@ -409,6 +409,11 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                    <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                        <input type="checkbox" id="fc-filter-starred" onchange="setupFlashcards()" class="rounded text-sakura-500 focus:ring-sakura-500">
+                        <span>只看星標</span>
+                    </label>
+
                     <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
                         <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
                         <input type="date" id="fc-filter-date" lang="en-GB" onchange="setupFlashcards()" class="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
@@ -422,7 +427,7 @@
                         <option value="形容詞">形容詞</option>
                         <option value="形容動詞">形容動詞</option>
                         <option value="助詞">助詞</option>
-<option value="片語/短句">片語/短句</option>
+                        <option value="片語/短句">片語/短句</option>
                     </select>
 
                     <select id="fc-filter-verb-type" onchange="setupFlashcards()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200">
@@ -542,8 +547,8 @@
                             <option value="動詞">動詞</option>
                             <option value="形容詞">形容詞 (い形)</option>
                             <option value="形容動詞">形容動詞 (な形)</option>
-                                <option value="助詞">助詞</option>
-<option value="片語/短句">片語/短句</option>
+                            <option value="助詞">助詞</option>
+                            <option value="片語/短句">片語/短句</option>
                         </select>
                     </div>
                     <div id="edit-verb-type-container" class="hidden">
@@ -1513,6 +1518,7 @@
                 wordAudio: state.currentWordAudio,
                 audio: state.currentAudio,
                 image: state.currentImage,
+                isStarred: false,
                 createdAt: Date.now(),
                 updatedAt: Date.now()
             };
@@ -1524,6 +1530,16 @@
             if (typeof confetti === 'function') confetti({ particleCount: 35, spread: 50 });
             autoUploadToDriveAppData();
             switchTab('gallery');
+        }
+
+        async function toggleStar(id) {
+            const v = state.vocabs.find(x => x.id === id);
+            if (!v) return;
+            v.isStarred = !v.isStarred;
+            v.updatedAt = Date.now();
+            await dbSaveVocab(v);
+            await loadVocabs();
+            autoUploadToDriveAppData();
         }
 
         function switchTab(tabId, saveToStorage = true) {
@@ -1605,6 +1621,9 @@
                 container.innerHTML = filtered.map(v => `
                     <div class="group bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col justify-between space-y-3 relative">
                         <div class="absolute top-1.5 right-1.5 flex items-center gap-0.5 z-20">
+                            <button type="button" onclick="toggleStar('${v.id}')" class="text-slate-400 hover:text-amber-400 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded shadow-sm" title="星標收藏">
+                                <i data-lucide="star" class="w-3 h-3 ${v.isStarred ? 'fill-amber-400 text-amber-400' : ''}"></i>
+                            </button>
                             <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded shadow-sm" title="編輯">
                                 <i data-lucide="edit-3" class="w-3 h-3"></i>
                             </button>
@@ -1665,6 +1684,9 @@
                 container.innerHTML = filtered.map(v => `
                     <div class="group bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
                         <div class="absolute top-1 right-1 flex items-center gap-0.5 z-20">
+                            <button type="button" onclick="toggleStar('${v.id}')" class="text-slate-400 hover:text-amber-400 transition-colors p-0.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded shadow-sm" title="星標收藏">
+                                <i data-lucide="star" class="w-2.5 h-2.5 ${v.isStarred ? 'fill-amber-400 text-amber-400' : ''}"></i>
+                            </button>
                             <button type="button" onclick="openEditModal('${v.id}')" class="text-slate-400 hover:text-sakura-500 transition-colors p-0.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded shadow-sm" title="編輯">
                                 <i data-lucide="edit-3" class="w-2.5 h-2.5"></i>
                             </button>
@@ -1784,6 +1806,7 @@
             const copy = {
                 ...v,
                 id: 'vocab_' + now,
+                isStarred: v.isStarred || false,
                 createdAt: now,
                 updatedAt: now
             };
@@ -1920,11 +1943,13 @@
         }
 
         function setupFlashcards() {
+            const fcStarred = document.getElementById('fc-filter-starred')?.checked;
             const fcDate = document.getElementById('fc-filter-date')?.value;
             const fcPos = document.getElementById('fc-filter-pos')?.value;
             const fcVerbType = document.getElementById('fc-filter-verb-type')?.value;
 
             state.fcDeck = state.vocabs.filter(v => {
+                if (fcStarred && !v.isStarred) return false;
                 if (fcDate) {
                     const itemDate = new Date(v.createdAt).toISOString().slice(0, 10);
                     if (itemDate !== fcDate) return false;
