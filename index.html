@@ -730,79 +730,6 @@
             checkAutoSyncInit();
         }
 
-        let syncChain = Promise.resolve();
-        let syncTimer = null;
-
-        function enqueueSync(fn) {
-            const run = syncChain.then(fn, fn);
-            syncChain = run.then(() => {}, () => {});
-            return run;
-        }
-
-        function setSyncLabel(text) {
-            const btnText = document.getElementById('sync-btn-text');
-            const btn = document.getElementById('sync-btn');
-            if (btnText) btnText.textContent = text;
-            if (btn) btn.title = text;
-        }
-
-        function scheduleSync() {
-            localStorage.setItem('nm_drive_dirty', '1');
-            clearTimeout(syncTimer);
-            syncTimer = setTimeout(() => {
-                enqueueSync(() => uploadToDriveAppData(true)).catch((err) => console.error(err));
-            }, 700);
-        }
-
-        async function listAppFiles() {
-            const files = [];
-            let pageToken = undefined;
-            do {
-                const res = await gapi.client.drive.files.list({
-                    q: "'appDataFolder' in parents and trashed = false",
-                    spaces: 'appDataFolder',
-                    fields: 'nextPageToken, files(id, name, modifiedTime, size)',
-                    pageSize: 100,
-                    pageToken
-                });
-                files.push(...(res.result.files || []));
-                pageToken = res.result.nextPageToken;
-            } while (pageToken);
-            return files;
-        }
-
-        async function uploadNamedFile(token, name, blob, fileId) {
-            const metadata = { name, mimeType: blob.type || 'application/octet-stream' };
-            if (!fileId) metadata.parents = ['appDataFolder'];
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-            form.append('file', blob, name);
-            const url = fileId
-                ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart&fields=id,modifiedTime`
-                : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime';
-            const res = await fetch(url, {
-                method: fileId ? 'PATCH' : 'POST',
-                headers: { 'Authorization': 'Bearer ' + token },
-                body: form
-            });
-            if (res.status === 401) {
-                localStorage.removeItem('gdrive_token');
-                updateSyncBtnUI(false);
-                throw new Error('auth');
-            }
-            if (!res.ok) throw new Error('Drive upload failed: ' + res.status);
-            return res.json();
-        }
-
-        function blobToDataUrl(blob) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            });
-        }
-
         async function checkAutoSyncInit() {
             if (!gapiInited || !gsisInited) return;
 
@@ -810,10 +737,7 @@
             if (savedToken) {
                 gapi.client.setToken({ access_token: savedToken });
                 updateSyncBtnUI(true);
-                await enqueueSync(async () => {
-                    await downloadAndMergeFromDriveAppData(true);
-                    if (localStorage.getItem('nm_drive_dirty') === '1') await uploadToDriveAppData(true);
-                });
+                await downloadAndMergeFromDriveAppData(true);
             }
         }
 
@@ -849,11 +773,8 @@
                 updateSyncBtnUI(true);
                 
                 try {
-                    await enqueueSync(async () => {
-                        gapi.client.setToken({ access_token: savedToken });
-                        await downloadAndMergeFromDriveAppData(false);
-                        await uploadToDriveAppData(false);
-                    });
+                    await downloadAndMergeFromDriveAppData(false);
+                    await uploadToDriveAppData(false);
                     return;
                 } catch (err) {
                     console.warn('Token 已失效，重新請求授權...', err);
@@ -872,202 +793,116 @@
                     gapi.client.setToken({ access_token: resp.access_token });
                     updateSyncBtnUI(true);
                 }
-                await enqueueSync(async () => {
-                    await downloadAndMergeFromDriveAppData(false);
-                    await uploadToDriveAppData(false);
-                });
+                await downloadAndMergeFromDriveAppData(false);
+                await uploadToDriveAppData(false);
             };
 
             tokenClient.requestAccessToken({ prompt: '' });
         }
 
         async function autoUploadToDriveAppData() {
-            scheduleSync();
+            const savedToken = localStorage.getItem('gdrive_token');
+            if (!savedToken || !gapiInited) return;
+
+            gapi.client.setToken({ access_token: savedToken });
+            await uploadToDriveAppData(true);
         }
 
         async function uploadToDriveAppData(isSilent = false) {
-            const currentTokenObj = gapi.client.getToken();
-            if (!currentTokenObj || !currentTokenObj.access_token) return false;
-            const accessToken = currentTokenObj.access_token;
-            setSyncLabel('同步中...');
-
             try {
-                const existing = await listAppFiles();
-                const indexFile = existing.find((file) => file.name === 'nihongo_mine_data.json');
-                const pending = await mediaIdsMissingDrive();
-                for (let i = 0; i < pending.length; i++) {
-                    setSyncLabel(`上載媒體 ${i + 1}/${pending.length}`);
-                    const key = pending[i];
-                    const splitAt = key.lastIndexOf(':');
-                    const vocabId = key.slice(0, splitAt);
-                    const kind = key.slice(splitAt + 1);
-                    const rec = await dbGetMediaRecord(vocabId, kind);
-                    if (!rec || !rec.data) continue;
-                    const blob = await (await fetch(rec.data)).blob();
-                    const uploaded = await uploadNamedFile(accessToken, `nm_${vocabId}_${kind}`, blob, rec.driveId || null);
-                    await dbSetMediaDriveId(vocabId, kind, uploaded.id);
-                }
+                const allData = await dbGetAll();
+                const fileContent = JSON.stringify(allData);
+                const file = new Blob([fileContent], { type: 'application/json' });
 
-                const cards = await dbGetAll();
-                const refs = await collectMediaRefs();
-                const byVocab = {};
-                refs.forEach((ref) => {
-                    if (!ref.driveId) return;
-                    if (!byVocab[ref.vocabId]) byVocab[ref.vocabId] = {};
-                    byVocab[ref.vocabId][ref.kind] = ref.driveId;
+                const response = await gapi.client.drive.files.list({
+                    q: "name='nihongo_mine_data.json' and 'appDataFolder' in parents",
+                    spaces: 'appDataFolder',
+                    fields: 'files(id, name)',
                 });
-                const payload = {
-                    version: 2,
-                    cards: cards.map((card) => {
-                        const copy = { ...card };
-                        delete copy.wordAudio;
-                        delete copy.audio;
-                        delete copy.image;
-                        if (!copy.deleted) copy.mediaFiles = byVocab[card.id] || {};
-                        return copy;
-                    })
+
+                const existingFiles = response.result.files;
+                let fileId = existingFiles.length > 0 ? existingFiles[0].id : null;
+
+                const metadata = {
+                    name: 'nihongo_mine_data.json',
+                    mimeType: 'application/json',
+                    parents: fileId ? [] : ['appDataFolder'],
                 };
-                setSyncLabel('同步中...');
-                const uploadedIndex = await uploadNamedFile(
-                    accessToken,
-                    'nihongo_mine_data.json',
-                    new Blob([JSON.stringify(payload)], { type: 'application/json' }),
-                    indexFile ? indexFile.id : null
-                );
-                if (uploadedIndex.modifiedTime) localStorage.setItem('nm_drive_mtime', uploadedIndex.modifiedTime);
-                localStorage.removeItem('nm_drive_dirty');
-                setSyncLabel('已同步');
-                setTimeout(() => {
-                    if (localStorage.getItem('gdrive_token')) setSyncLabel('已連線 Google Drive');
-                }, 1200);
-                if (!isSilent) alert('Google Drive 同步成功。音訊和圖片會分開上載，所以會快很多。');
-                return true;
-            } catch (err) {
-                console.error('Upload to Drive error:', err);
-                setSyncLabel('同步失敗，將再試');
-                if (!isSilent) alert('同步失敗，請再按一次。如果手機當掉，請先用電腦同步一次。');
-                throw err;
-            }
-        }
 
-        async function downloadMissingMedia(cards, accessToken) {
-            const jobs = [];
-            (cards || []).forEach((card) => {
-                if (!card || card.deleted || !card.mediaFiles) return;
-                MEDIA_KINDS.forEach((kind) => {
-                    if (card.mediaFiles[kind]) jobs.push({ vocabId: card.id, kind, driveId: card.mediaFiles[kind] });
-                });
-            });
-            for (let i = 0; i < jobs.length; i++) {
-                const job = jobs[i];
-                const rec = await dbGetMediaRecord(job.vocabId, job.kind);
-                if (rec && rec.driveId === job.driveId && rec.data) continue;
-                setSyncLabel(`下載媒體 ${i + 1}/${jobs.length}`);
-                const res = await fetch(`https://www.googleapis.com/drive/v3/files/${job.driveId}?alt=media`, {
-                    headers: { 'Authorization': 'Bearer ' + accessToken }
-                });
-                if (!res.ok) continue;
-                const dataUrl = await blobToDataUrl(await res.blob());
-                await dbPutMedia(job.vocabId, job.kind, dataUrl, job.driveId);
-            }
-        }
-
-        async function downloadAndMergeFromDriveAppData(isSilent = false) {
-            try {
                 const currentTokenObj = gapi.client.getToken();
                 if (!currentTokenObj || !currentTokenObj.access_token) return;
+
                 const accessToken = currentTokenObj.access_token;
-                const files = await listAppFiles();
-                const indexFile = files.find((file) => file.name === 'nihongo_mine_data.json');
-                if (!indexFile) return;
+                const form = new FormData();
+                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                form.append('file', file);
 
-                const known = localStorage.getItem('nm_drive_mtime');
-                const dirty = localStorage.getItem('nm_drive_dirty') === '1';
-                if (known && indexFile.modifiedTime === known && !dirty) return;
+                const url = fileId
+                    ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`
+                    : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
 
-                const size = Number(indexFile.size || 0);
-                if (size > 7000000 && isAppleMobile()) {
-                    setSyncLabel('雲端檔太大');
-                    if (!sessionStorage.getItem('nm_bigfile_warned')) {
-                        sessionStorage.setItem('nm_bigfile_warned', '1');
-                        alert('舊的雲端備份太大，iPhone 一次載入會當掉。請先用電腦打開這個新版本，按一次 Google Drive 同步。完成後再開手機。');
-                    }
-                    return;
-                }
-
-                setSyncLabel('同步中...');
-                const res = await fetch(`https://www.googleapis.com/drive/v3/files/${indexFile.id}?alt=media`, {
-                    headers: { 'Authorization': 'Bearer ' + accessToken }
+                const res = await fetch(url, {
+                    method: fileId ? 'PATCH' : 'POST',
+                    headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
+                    body: form,
                 });
+
                 if (res.status === 401) {
                     localStorage.removeItem('gdrive_token');
                     updateSyncBtnUI(false);
                     return;
                 }
-                if (!res.ok) throw new Error('download ' + res.status);
 
-                const remote = JSON.parse(await res.text());
-                if (Array.isArray(remote)) {
-                    if (isAppleMobile() && size > 4000000) {
-                        setSyncLabel('雲端檔太大');
-                        return;
-                    }
+                if (!isSilent) {
+                    alert('Google Drive 雙向同步成功！');
+                } else {
+                    console.log('背景自動同步成功！');
+                }
+            } catch (err) {
+                console.error('Upload to Drive error:', err);
+                throw err;
+            }
+        }
+
+        async function downloadAndMergeFromDriveAppData(isSilent = false) {
+            try {
+                const response = await gapi.client.drive.files.list({
+                    q: "name='nihongo_mine_data.json' and 'appDataFolder' in parents",
+                    spaces: 'appDataFolder',
+                    fields: 'files(id, name)',
+                });
+
+                const files = response.result.files;
+                if (files.length === 0) return;
+
+                const fileId = files[0].id;
+                const res = await gapi.client.drive.files.get({
+                    fileId: fileId,
+                    alt: 'media',
+                });
+
+                let remoteData = res.result;
+                if (typeof remoteData === 'string') {
+                    try { remoteData = JSON.parse(remoteData); } catch (parseErr) { remoteData = null; }
+                }
+                if (Array.isArray(remoteData)) {
                     const localData = await dbGetAll();
-                    const localMap = new Map(localData.map((item) => [item.id, item]));
-                    for (const item of remote) {
-                        if (!item || !item.id) continue;
-                        const current = localMap.get(item.id);
-                        const remoteTime = item.updatedAt || item.createdAt || 0;
-                        const localTime = current ? (current.updatedAt || current.createdAt || 0) : -1;
-                        if (current && localTime > remoteTime) continue;
-                        if (item.deleted) {
-                            await dbDeleteAllMedia(item.id);
-                            await dbSaveVocab(item);
-                        } else {
-                            await saveVocabAndMedia(item);
-                        }
+                    const merged = mergeVocabLists(localData, remoteData);
+                    await dbClearAll();
+                    for (let item of merged) {
+                        await dbSaveVocab(item);
                     }
                     await loadVocabs();
-                    localStorage.setItem('nm_drive_dirty', '1');
-                    return;
-                }
-
-                if (!remote || !Array.isArray(remote.cards)) return;
-                const localData = await dbGetAll();
-                const localMap = new Map(localData.map((item) => [item.id, item]));
-                for (const item of remote.cards) {
-                    if (!item || !item.id) continue;
-                    const current = localMap.get(item.id);
-                    const remoteTime = item.updatedAt || item.createdAt || 0;
-                    const localTime = current ? (current.updatedAt || current.createdAt || 0) : -1;
-                    if (current && localTime > remoteTime) continue;
-                    const clean = { ...item };
-                    delete clean.wordAudio;
-                    delete clean.audio;
-                    delete clean.image;
-                    clean.hasWordAudio = !!(item.mediaFiles && item.mediaFiles.wordAudio);
-                    clean.hasAudio = !!(item.mediaFiles && item.mediaFiles.audio);
-                    clean.hasImage = !!(item.mediaFiles && item.mediaFiles.image);
-                    if (clean.deleted) {
-                        clean.hasWordAudio = false;
-                        clean.hasAudio = false;
-                        clean.hasImage = false;
-                        await dbDeleteAllMedia(clean.id);
+                    if (vocabSnapshot(merged) !== vocabSnapshot(remoteData)) {
+                        await uploadToDriveAppData(true);
                     }
-                    await dbSaveVocab(clean);
                 }
-                await loadVocabs();
-                await downloadMissingMedia(remote.cards, accessToken);
-                await loadVocabs();
-                if (!dirty) localStorage.setItem('nm_drive_mtime', indexFile.modifiedTime);
-                setSyncLabel('已連線 Google Drive');
             } catch (err) {
-                if (err && err.status === 401) {
+                if (err.status === 401) {
                     localStorage.removeItem('gdrive_token');
                     updateSyncBtnUI(false);
                 } else {
                     console.error('Download from Drive error:', err);
-                    setSyncLabel('同步失敗，將再試');
                 }
                 throw err;
             }
@@ -1182,28 +1017,24 @@
             if (input) input.classList.toggle('is-covered', !!covered);
         }
 
-        async function playWordAudio(id) {
+        function playWordAudio(id) {
             const v = state.vocabs.find(x => x.id === id);
-            if (!v) return;
-            const src = await dbGetMedia(id, 'wordAudio');
-            if (src) {
-                const audio = new Audio(src);
+            if (v && v.wordAudio) {
+                const audio = new Audio(v.wordAudio);
                 audio.play();
-                return;
+            } else if (v) {
+                speakJapanese(v.word);
             }
-            speakJapanese(v.word);
         }
 
-        async function playSentenceAudio(id) {
+        function playSentenceAudio(id) {
             const v = state.vocabs.find(x => x.id === id);
-            if (!v) return;
-            const src = await dbGetMedia(id, 'audio');
-            if (src) {
-                const audio = new Audio(src);
+            if (v && v.audio) {
+                const audio = new Audio(v.audio);
                 audio.play();
-                return;
+            } else if (v && v.sentence) {
+                speakJapanese(v.sentence);
             }
-            if (v.sentence) speakJapanese(v.sentence);
         }
 
         /* ==========================================================================
@@ -1265,8 +1096,7 @@
            INDEXEDDB PERSISTENCE LAYER
            ========================================================================== */
         const DB_NAME = 'NihongoMineLocalDB';
-        const DB_VERSION = 2;
-        const MEDIA_KINDS = ['wordAudio', 'audio', 'image'];
+        const DB_VERSION = 1;
         let db = null;
 
         function initDB() {
@@ -1276,38 +1106,6 @@
                     const database = e.target.result;
                     if (!database.objectStoreNames.contains('vocabs')) {
                         database.createObjectStore('vocabs', { keyPath: 'id' });
-                    }
-                    if (!database.objectStoreNames.contains('media')) {
-                        database.createObjectStore('media', { keyPath: 'id' });
-                    }
-                    if (e.oldVersion > 0 && e.oldVersion < 2) {
-                        const tx = request.transaction;
-                        const vocabs = tx.objectStore('vocabs');
-                        const media = tx.objectStore('media');
-                        const req = vocabs.openCursor();
-                        req.onsuccess = (ev) => {
-                            const cursor = ev.target.result;
-                            if (!cursor) return;
-                            const item = cursor.value;
-                            let changed = false;
-                            MEDIA_KINDS.forEach((kind) => {
-                                const val = item[kind];
-                                if (typeof val === 'string' && val.indexOf('data:') === 0) {
-                                    media.put({
-                                        id: item.id + ':' + kind,
-                                        vocabId: item.id,
-                                        kind,
-                                        data: val,
-                                        driveId: ''
-                                    });
-                                    delete item[kind];
-                                    item[kind === 'wordAudio' ? 'hasWordAudio' : kind === 'audio' ? 'hasAudio' : 'hasImage'] = true;
-                                    changed = true;
-                                }
-                            });
-                            if (changed) cursor.update(item);
-                            cursor.continue();
-                        };
                     }
                 };
                 request.onsuccess = (e) => {
@@ -1358,123 +1156,6 @@
             });
         }
 
-        function mediaKey(vocabId, kind) {
-            return vocabId + ':' + kind;
-        }
-
-        function dbGetMediaRecord(vocabId, kind) {
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction('media', 'readonly');
-                const req = tx.objectStore('media').get(mediaKey(vocabId, kind));
-                req.onsuccess = () => resolve(req.result || null);
-                req.onerror = (e) => reject(e);
-            });
-        }
-
-        async function dbGetMedia(vocabId, kind) {
-            const rec = await dbGetMediaRecord(vocabId, kind);
-            return rec && rec.data ? rec.data : '';
-        }
-
-        function dbPutMedia(vocabId, kind, data, driveId) {
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction('media', 'readwrite');
-                const store = tx.objectStore('media');
-                const key = mediaKey(vocabId, kind);
-                const getReq = store.get(key);
-                getReq.onsuccess = () => {
-                    const prev = getReq.result;
-                    const same = prev && prev.data === data;
-                    store.put({
-                        id: key,
-                        vocabId,
-                        kind,
-                        data,
-                        driveId: driveId || (same ? (prev.driveId || '') : '')
-                    });
-                };
-                tx.oncomplete = () => resolve();
-                tx.onerror = (e) => reject(e);
-            });
-        }
-
-        function dbSetMediaDriveId(vocabId, kind, driveId) {
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction('media', 'readwrite');
-                const store = tx.objectStore('media');
-                const req = store.get(mediaKey(vocabId, kind));
-                req.onsuccess = () => {
-                    const prev = req.result;
-                    if (!prev) return;
-                    prev.driveId = driveId || '';
-                    store.put(prev);
-                };
-                tx.oncomplete = () => resolve();
-                tx.onerror = (e) => reject(e);
-            });
-        }
-
-        function dbDeleteMedia(vocabId, kind) {
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction('media', 'readwrite');
-                tx.objectStore('media').delete(mediaKey(vocabId, kind));
-                tx.oncomplete = () => resolve();
-                tx.onerror = (e) => reject(e);
-            });
-        }
-
-        async function dbDeleteAllMedia(vocabId) {
-            for (const kind of MEDIA_KINDS) await dbDeleteMedia(vocabId, kind);
-        }
-
-        function mediaIdsMissingDrive() {
-            return new Promise((resolve, reject) => {
-                const ids = [];
-                const req = db.transaction('media', 'readonly').objectStore('media').openCursor();
-                req.onsuccess = (ev) => {
-                    const cursor = ev.target.result;
-                    if (!cursor) { resolve(ids); return; }
-                    if (cursor.value && cursor.value.data && !cursor.value.driveId) ids.push(cursor.value.id);
-                    cursor.continue();
-                };
-                req.onerror = (e) => reject(e);
-            });
-        }
-
-        function collectMediaRefs() {
-            return new Promise((resolve, reject) => {
-                const refs = [];
-                const req = db.transaction('media', 'readonly').objectStore('media').openCursor();
-                req.onsuccess = (ev) => {
-                    const cursor = ev.target.result;
-                    if (!cursor) { resolve(refs); return; }
-                    const value = cursor.value || {};
-                    refs.push({ vocabId: value.vocabId, kind: value.kind, driveId: value.driveId || '' });
-                    cursor.continue();
-                };
-                req.onerror = (e) => reject(e);
-            });
-        }
-
-        async function saveVocabAndMedia(entry) {
-            const media = {
-                wordAudio: entry.wordAudio || '',
-                audio: entry.audio || '',
-                image: entry.image || ''
-            };
-            delete entry.wordAudio;
-            delete entry.audio;
-            delete entry.image;
-            entry.hasWordAudio = !!media.wordAudio;
-            entry.hasAudio = !!media.audio;
-            entry.hasImage = !!media.image;
-            await dbSaveVocab(entry);
-            for (const kind of MEDIA_KINDS) {
-                if (media[kind]) await dbPutMedia(entry.id, kind, media[kind]);
-                else await dbDeleteMedia(entry.id, kind);
-            }
-        }
-
         /* ==========================================================================
            APPLICATION STATE & HANDLERS
            ========================================================================== */
@@ -1513,15 +1194,6 @@
                     }
                 }
             });
-
-            setInterval(() => {
-                if (document.visibilityState !== 'visible') return;
-                if (!gapiInited || !localStorage.getItem('gdrive_token')) return;
-                enqueueSync(async () => {
-                    await downloadAndMergeFromDriveAppData(true);
-                    if (localStorage.getItem('nm_drive_dirty') === '1') await uploadToDriveAppData(true);
-                }).catch((err) => console.error(err));
-            }, 60000);
         });
 
         async function loadVocabs() {
@@ -1865,7 +1537,7 @@
             clearForm();
 
             if (typeof confetti === 'function') confetti({ particleCount: 35, spread: 50 });
-            scheduleSync();
+            autoUploadToDriveAppData();
             switchTab('gallery');
         }
 
@@ -1876,7 +1548,7 @@
             v.updatedAt = Date.now();
             await dbSaveVocab(v);
             await loadVocabs();
-            scheduleSync();
+            autoUploadToDriveAppData();
         }
 
         function switchTab(tabId, saveToStorage = true) {
@@ -1996,10 +1668,8 @@
                                     <p class="text-sm font-bold text-slate-700 dark:text-slate-200 pt-1">${v.definition}</p>
                                 </div>
 
-                                ${v.hasImage ? `
-                                    <button type="button" data-thumb-for="${v.id}" onclick="openCardImage('${v.id}')" class="thumb-slot w-36 sm:w-40 h-24 sm:h-28 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-sakura-500 flex items-center justify-center shrink-0 ml-auto -mr-1" title="查看圖片">
-                                        <i data-lucide="image" class="w-6 h-6"></i>
-                                    </button>
+                                ${v.image ? `
+                                    <img src="${v.image}" onclick="openImageModal('${v.image}')" class="w-36 sm:w-40 h-24 sm:h-28 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform shadow-md shrink-0 ml-auto -mr-1" title="點擊放大圖片">
                                 ` : ''}
                             </div>
 
@@ -2064,10 +1734,8 @@
                         </div>
 
                         <div class="shrink-0 flex items-center justify-end">
-                            ${v.hasImage ? `
-                                <button type="button" data-thumb-for="${v.id}" onclick="openCardImage('${v.id}')" class="thumb-slot w-44 h-28 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-sakura-500 flex items-center justify-center" title="查看圖片">
-                                    <i data-lucide="image" class="w-6 h-6"></i>
-                                </button>
+                            ${v.image ? `
+                                <img src="${v.image}" onclick="openImageModal('${v.image}')" class="w-44 h-28 rounded-xl object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform shadow-md" title="點擊放大圖片">
                             ` : `
                                 <div class="hidden sm:block w-44 h-28 opacity-0 pointer-events-none"></div>
                             `}
