@@ -1860,7 +1860,7 @@
                 updatedAt: Date.now()
             };
 
-            await dbSaveVocab(entry);
+            await saveVocabAndMedia(entry);
             await loadVocabs();
             clearForm();
 
@@ -2077,6 +2077,43 @@
             }
 
             lucide.createIcons();
+            hydrateGalleryImages();
+        }
+
+        function hydrateGalleryImages() {
+            const nodes = document.querySelectorAll('[data-thumb-for]');
+            if (!nodes.length) return;
+            const paint = async (node) => {
+                const id = node.getAttribute('data-thumb-for');
+                if (!id || node.dataset.loaded) return;
+                node.dataset.loaded = '1';
+                const src = await dbGetMedia(id, 'image');
+                if (!src || !node.isConnected) return;
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = '';
+                img.title = '點擊放大圖片';
+                img.className = node.className.replace('thumb-slot', '') + ' object-cover cursor-pointer hover:scale-105 transition-transform shadow-md';
+                img.onclick = () => openImageModal(img.src);
+                node.replaceWith(img);
+            };
+            if (!('IntersectionObserver' in window)) {
+                nodes.forEach((node) => paint(node));
+                return;
+            }
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (!entry.isIntersecting) return;
+                    observer.unobserve(entry.target);
+                    paint(entry.target);
+                });
+            }, { rootMargin: '300px' });
+            nodes.forEach((node) => observer.observe(node));
+        }
+
+        async function openCardImage(id) {
+            const src = await dbGetMedia(id, 'image');
+            if (src) openImageModal(src);
         }
 
         function escapeHtml(str) {
@@ -2104,7 +2141,7 @@
             return true;
         }
 
-        function fillAddFormFromCard(id) {
+        async function fillAddFormFromCard(id) {
             if (!id) return;
             const v = state.vocabs.find(x => x.id === id);
             if (!v) return;
@@ -2119,21 +2156,25 @@
             document.getElementById('input-sentence-tr').value = v.sentenceTr || '';
             document.getElementById('input-remarks').value = v.remarks || '';
 
-            if (!showCopiedAudio('word-audio-preview-container', 'word-audio-prompt', 'word-audio-element', 'word-audio-filename', 'file-word-audio', v.wordAudio, '已複製單詞音訊')) {
+            const wordAudio = await dbGetMedia(v.id, 'wordAudio');
+            const sentenceAudio = await dbGetMedia(v.id, 'audio');
+            const image = await dbGetMedia(v.id, 'image');
+
+            if (!showCopiedAudio('word-audio-preview-container', 'word-audio-prompt', 'word-audio-element', 'word-audio-filename', 'file-word-audio', wordAudio, '已複製單詞音訊')) {
                 clearWordAudio();
             } else {
-                state.currentWordAudio = v.wordAudio;
+                state.currentWordAudio = wordAudio;
             }
 
-            if (!showCopiedAudio('audio-preview-container', 'audio-prompt', 'audio-element', 'audio-filename', 'file-audio', v.audio, '已複製例句音訊')) {
+            if (!showCopiedAudio('audio-preview-container', 'audio-prompt', 'audio-element', 'audio-filename', 'file-audio', sentenceAudio, '已複製例句音訊')) {
                 clearAudio();
             } else {
-                state.currentAudio = v.audio;
+                state.currentAudio = sentenceAudio;
             }
 
-            if (v.image) {
-                state.currentImage = v.image;
-                document.getElementById('image-element').src = v.image;
+            if (image) {
+                state.currentImage = image;
+                document.getElementById('image-element').src = image;
                 document.getElementById('image-prompt').classList.add('hidden');
                 document.getElementById('image-preview-container').classList.remove('hidden');
                 document.getElementById('image-filename').textContent = '已複製截圖';
@@ -2153,15 +2194,25 @@
                 createdAt: now,
                 updatedAt: now
             };
+            delete copy.wordAudio;
+            delete copy.audio;
+            delete copy.image;
             await dbSaveVocab(copy);
+            for (const kind of MEDIA_KINDS) {
+                const data = await dbGetMedia(id, kind);
+                if (data) await dbPutMedia(copy.id, kind, data);
+            }
             await loadVocabs();
-            autoUploadToDriveAppData();
+            scheduleSync();
         }
 
         /* EDIT MODAL FUNCTIONS */
-        function openEditModal(id) {
+        async function openEditModal(id) {
             const v = state.vocabs.find(x => x.id === id);
             if (!v) return;
+            const wordAudio = await dbGetMedia(v.id, 'wordAudio');
+            const sentenceAudio = await dbGetMedia(v.id, 'audio');
+            const image = await dbGetMedia(v.id, 'image');
 
             document.getElementById('edit-id').value = v.id;
             document.getElementById('edit-word').value = v.word;
@@ -2175,9 +2226,9 @@
 
             toggleVerbTypeVisibility('edit-pos', 'edit-verb-type-container');
 
-            if (v.wordAudio) {
-                state.editWordAudio = v.wordAudio;
-                document.getElementById('edit-word-audio-element').src = v.wordAudio;
+            if (wordAudio) {
+                state.editWordAudio = wordAudio;
+                document.getElementById('edit-word-audio-element').src = wordAudio;
                 document.getElementById('edit-word-audio-prompt').classList.add('hidden');
                 document.getElementById('edit-word-audio-preview-container').classList.remove('hidden');
                 document.getElementById('edit-word-audio-filename').textContent = '已保存音訊';
@@ -2186,9 +2237,9 @@
                 clearEditWordAudio();
             }
 
-            if (v.audio) {
-                state.editAudio = v.audio;
-                document.getElementById('edit-audio-element').src = v.audio;
+            if (sentenceAudio) {
+                state.editAudio = sentenceAudio;
+                document.getElementById('edit-audio-element').src = sentenceAudio;
                 document.getElementById('edit-audio-prompt').classList.add('hidden');
                 document.getElementById('edit-audio-preview-container').classList.remove('hidden');
                 document.getElementById('edit-audio-filename').textContent = '已保存音訊';
@@ -2197,9 +2248,9 @@
                 clearEditAudio();
             }
 
-            if (v.image) {
-                state.editImage = v.image;
-                document.getElementById('edit-image-element').src = v.image;
+            if (image) {
+                state.editImage = image;
+                document.getElementById('edit-image-element').src = image;
                 document.getElementById('edit-image-prompt').classList.add('hidden');
                 document.getElementById('edit-image-preview-container').classList.remove('hidden');
                 document.getElementById('edit-image-filename').textContent = '已保存截圖';
@@ -2240,25 +2291,29 @@
                 updatedAt: Date.now(),
             };
 
-            await dbSaveVocab(updatedEntry);
+            await saveVocabAndMedia(updatedEntry);
             await loadVocabs();
             closeEditModal();
-            autoUploadToDriveAppData();
+            scheduleSync();
         }
 
         async function deleteEntry(id) {
             if (confirm('確定要刪除這張採集卡片嗎？')) {
                 const existing = state.vocabs.find(x => x.id === id);
+                await dbDeleteAllMedia(id);
                 await dbSaveVocab({
                     id,
                     word: existing ? existing.word : '',
                     definition: existing ? existing.definition : '',
                     createdAt: existing ? existing.createdAt : Date.now(),
                     updatedAt: Date.now(),
-                    deleted: true
+                    deleted: true,
+                    hasWordAudio: false,
+                    hasAudio: false,
+                    hasImage: false
                 });
                 await loadVocabs();
-                await uploadToDriveAppData(true);
+                scheduleSync();
             }
         }
 
@@ -2486,7 +2541,7 @@
                         </div>
                     ` : ''}
 
-                    ${cur.image ? `<img src="${cur.image}" onclick="event.stopPropagation(); openImageModal('${cur.image}')" class="max-h-24 sm:max-h-28 rounded-xl border border-slate-200 dark:border-slate-700 mx-auto shadow-md object-cover cursor-pointer hover:scale-105 transition-transform">` : ''}
+                    ${cur.hasImage ? `<img data-fc-image="${cur.id}" alt="" class="max-h-24 sm:max-h-28 rounded-xl border border-slate-200 dark:border-slate-700 mx-auto shadow-md object-cover cursor-pointer hover:scale-105 transition-transform">` : ''}
                 </div>
             `;
         }
@@ -2593,6 +2648,14 @@
             }
 
             lucide.createIcons();
+            const fcImg = document.querySelector('[data-fc-image]');
+            if (fcImg) {
+                dbGetMedia(fcImg.getAttribute('data-fc-image'), 'image').then((src) => {
+                    if (!src) return;
+                    fcImg.src = src;
+                    fcImg.onclick = (e) => { e.stopPropagation(); openImageModal(src); };
+                });
+            }
         }
 
         function nextFlashcard() {
@@ -2612,8 +2675,16 @@
         function openBackupModal() { document.getElementById('backup-modal').classList.remove('hidden'); }
         function closeBackupModal() { document.getElementById('backup-modal').classList.add('hidden'); }
 
-        function exportBackupJSON() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.vocabs, null, 2));
+        async function exportBackupJSON() {
+            const data = [];
+            for (const item of state.vocabs) {
+                const copy = { ...item };
+                copy.wordAudio = await dbGetMedia(item.id, 'wordAudio');
+                copy.audio = await dbGetMedia(item.id, 'audio');
+                copy.image = await dbGetMedia(item.id, 'image');
+                data.push(copy);
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
             const dl = document.createElement('a');
             dl.setAttribute("href", dataStr);
             dl.setAttribute("download", `nihongo_mine_backup_${new Date().toISOString().slice(0,10)}.json`);
@@ -2630,9 +2701,14 @@
                 try {
                     const list = JSON.parse(ev.target.result);
                     if (Array.isArray(list)) {
-                        for (let item of list) await dbSaveVocab(item);
+                        for (let item of list) {
+                            if (!item || !item.id) continue;
+                            if (!item.updatedAt) item.updatedAt = Date.now();
+                            if (item.deleted) await dbSaveVocab(item);
+                            else await saveVocabAndMedia(item);
+                        }
                         await loadVocabs();
-                        autoUploadToDriveAppData();
+                        scheduleSync();
                         alert(`成功匯入 ${list.length} 個生字卡片！`);
                         closeBackupModal();
                     }
