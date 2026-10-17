@@ -1111,12 +1111,12 @@
             const appleMobile = isAppleMobile();
 
             const speakNow = () => {
-                synth.cancel();
                 const u = new SpeechSynthesisUtterance(text);
                 u.lang = 'ja-JP';
                 u.rate = 1.0;
 
                 if (!appleMobile) {
+                    synth.cancel();
                     const voices = synth.getVoices();
                     const preferredVoice = voices.find(v =>
                         (v.lang === 'ja-JP' || v.lang === 'ja') &&
@@ -1126,6 +1126,8 @@
                     if (preferredVoice) {
                         u.voice = preferredVoice;
                     }
+                } else if (synth.paused) {
+                    synth.resume();
                 }
 
                 synth.speak(u);
@@ -1182,28 +1184,40 @@
             if (input) input.classList.toggle('is-covered', !!covered);
         }
 
-        async function playWordAudio(id) {
+        function playWordAudio(id) {
             const v = state.vocabs.find(x => x.id === id);
             if (!v) return;
-            const src = await dbGetMedia(id, 'wordAudio');
-            if (src) {
-                const audio = new Audio(src);
-                audio.play();
+            if (!v.hasWordAudio) {
+                speakJapanese(v.word);
                 return;
             }
-            speakJapanese(v.word);
+            dbGetMedia(id, 'wordAudio').then((src) => {
+                if (!src) {
+                    speakJapanese(v.word);
+                    return;
+                }
+                const audio = new Audio(src);
+                const played = audio.play();
+                if (played && played.catch) played.catch(() => speakJapanese(v.word));
+            }).catch(() => speakJapanese(v.word));
         }
 
-        async function playSentenceAudio(id) {
+        function playSentenceAudio(id) {
             const v = state.vocabs.find(x => x.id === id);
             if (!v) return;
-            const src = await dbGetMedia(id, 'audio');
-            if (src) {
-                const audio = new Audio(src);
-                audio.play();
+            if (!v.hasAudio) {
+                if (v.sentence) speakJapanese(v.sentence);
                 return;
             }
-            if (v.sentence) speakJapanese(v.sentence);
+            dbGetMedia(id, 'audio').then((src) => {
+                if (!src) {
+                    if (v.sentence) speakJapanese(v.sentence);
+                    return;
+                }
+                const audio = new Audio(src);
+                const played = audio.play();
+                if (played && played.catch) played.catch(() => { if (v.sentence) speakJapanese(v.sentence); });
+            }).catch(() => { if (v.sentence) speakJapanese(v.sentence); });
         }
 
         /* ==========================================================================
