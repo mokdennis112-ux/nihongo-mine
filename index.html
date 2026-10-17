@@ -1099,9 +1099,14 @@
             return JSON.stringify((list || []).map(item => item.id + ':' + recordTime(item)).sort());
         }
 
+        let heldUtterance = null;
+
         function isAppleMobile() {
-            return /iPad|iPhone|iPod/.test(navigator.userAgent)
-                || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const ua = navigator.userAgent || '';
+            const touch = (navigator.maxTouchPoints || 0) > 1;
+            return /iPad|iPhone|iPod/.test(ua)
+                || (navigator.platform === 'MacIntel' && touch)
+                || (touch && /Macintosh|Mac OS X/.test(ua));
         }
 
         function speakJapanese(text) {
@@ -1114,22 +1119,21 @@
                 const u = new SpeechSynthesisUtterance(text);
                 u.lang = 'ja-JP';
                 u.rate = 1.0;
+                u.volume = 1;
+                u.onend = () => {};
+                u.onerror = () => {};
+                heldUtterance = u;
 
                 if (!appleMobile) {
-                    synth.cancel();
                     const voices = synth.getVoices();
                     const preferredVoice = voices.find(v =>
                         (v.lang === 'ja-JP' || v.lang === 'ja') &&
                         (v.name.includes('Nanami') || v.name.includes('Keita') || v.name.includes('Natural'))
                     ) || voices.find(v => v.lang === 'ja-JP' || v.lang === 'ja');
-
-                    if (preferredVoice) {
-                        u.voice = preferredVoice;
-                    }
-                } else if (synth.paused) {
-                    synth.resume();
+                    if (preferredVoice) u.voice = preferredVoice;
                 }
 
+                synth.cancel();
                 synth.speak(u);
             };
 
@@ -1187,37 +1191,47 @@
         function playWordAudio(id) {
             const v = state.vocabs.find(x => x.id === id);
             if (!v) return;
+            const apple = isAppleMobile();
+            const fallback = v.word || v.reading || '';
             if (!v.hasWordAudio) {
-                speakJapanese(v.word);
+                speakJapanese(fallback);
                 return;
             }
+            if (apple) speakJapanese(fallback);
             dbGetMedia(id, 'wordAudio').then((src) => {
                 if (!src) {
-                    speakJapanese(v.word);
+                    if (!apple) speakJapanese(fallback);
                     return;
                 }
+                if (apple && window.speechSynthesis) window.speechSynthesis.cancel();
                 const audio = new Audio(src);
+                audio.setAttribute('playsinline', '');
                 const played = audio.play();
-                if (played && played.catch) played.catch(() => speakJapanese(v.word));
-            }).catch(() => speakJapanese(v.word));
+                if (played && played.catch) played.catch(() => speakJapanese(fallback));
+            }).catch(() => { if (!apple) speakJapanese(fallback); });
         }
 
         function playSentenceAudio(id) {
             const v = state.vocabs.find(x => x.id === id);
             if (!v) return;
+            const apple = isAppleMobile();
+            const fallback = v.sentence || '';
             if (!v.hasAudio) {
-                if (v.sentence) speakJapanese(v.sentence);
+                speakJapanese(fallback);
                 return;
             }
+            if (apple && fallback) speakJapanese(fallback);
             dbGetMedia(id, 'audio').then((src) => {
                 if (!src) {
-                    if (v.sentence) speakJapanese(v.sentence);
+                    if (!apple) speakJapanese(fallback);
                     return;
                 }
+                if (apple && window.speechSynthesis) window.speechSynthesis.cancel();
                 const audio = new Audio(src);
+                audio.setAttribute('playsinline', '');
                 const played = audio.play();
-                if (played && played.catch) played.catch(() => { if (v.sentence) speakJapanese(v.sentence); });
-            }).catch(() => { if (v.sentence) speakJapanese(v.sentence); });
+                if (played && played.catch) played.catch(() => speakJapanese(fallback));
+            }).catch(() => { if (!apple) speakJapanese(fallback); });
         }
 
         /* ==========================================================================
