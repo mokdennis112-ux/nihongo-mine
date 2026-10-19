@@ -1958,6 +1958,13 @@
             return `${d.getFullYear()}-${month}-${day}`;
         }
 
+        function formatAddedDate(ts) {
+            const key = localDateKey(ts);
+            if (!key) return '';
+            const [year, month, day] = key.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
         function matchesDateFilter(ts, from, to) {
             const key = localDateKey(ts);
             if (!from && !to) return true;
@@ -2068,7 +2075,7 @@
                         </div>
 
                         <div class="pt-2 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-end">
-                            <span class="text-[10px] text-slate-400">${new Date(v.createdAt).toLocaleDateString()}</span>
+                            <span class="text-[10px] text-slate-400">${formatAddedDate(v.createdAt)}</span>
                         </div>
                     </div>
                 `).join('');
@@ -2100,6 +2107,7 @@
                                     </button>
                                     ${v.reading ? `<span class="text-xs text-sakura-500 font-jp">${v.reading}</span>` : ''}
                                     ${v.pos ? `<span class="px-2 py-0.5 text-[9px] font-bold rounded bg-sakura-50 text-sakura-600 dark:bg-sakura-900/40 dark:text-sakura-400">[${v.pos}${v.verbType ? ` · ${v.verbType}` : ''}]</span>` : ''}
+                                    <span class="text-[10px] font-semibold text-slate-400">${formatAddedDate(v.createdAt)}</span>
                                 </div>
                                 <p class="text-xs font-bold text-slate-600 dark:text-slate-300">${v.definition}</p>
 
