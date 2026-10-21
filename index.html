@@ -1904,13 +1904,31 @@
         }
 
         async function toggleStar(id) {
-            const v = state.vocabs.find(x => x.id === id);
+            const v = state.vocabs.find(x => x.id === id) || (state.fcDeck || []).find(x => x.id === id);
             if (!v) return;
             v.isStarred = !v.isStarred;
             v.updatedAt = Date.now();
+            const starred = !!v.isStarred;
             await dbSaveVocab(v);
             await loadVocabs();
             scheduleSync();
+
+            if (state.fcDeck) {
+                const idx = state.fcDeck.findIndex(x => x.id === id);
+                const onlyStar = document.getElementById('fc-filter-starred')?.checked;
+                if (idx !== -1) {
+                    if (onlyStar && !starred) {
+                        state.fcDeck.splice(idx, 1);
+                        if (state.fcIndex > idx) state.fcIndex--;
+                        if (state.fcIndex >= state.fcDeck.length) state.fcIndex = Math.max(0, state.fcDeck.length - 1);
+                        state.fcPageStep = 1;
+                    } else {
+                        state.fcDeck[idx].isStarred = starred;
+                    }
+                }
+            }
+
+            if (state.currentTab === 'cards') updateFlashcard();
         }
 
         function switchTab(tabId, saveToStorage = true) {
@@ -2621,7 +2639,11 @@
             document.getElementById('fc-status').textContent = `進度: ${state.fcIndex + 1} / ${state.fcDeck.length}`;
             document.getElementById('fc-progress').style.width = `${((state.fcIndex + 1) / state.fcDeck.length) * 100}%`;
 
-            topRightActions.innerHTML = '';
+            topRightActions.innerHTML = `
+                <button type="button" onclick="toggleStar('${cur.id}')" class="p-1.5 rounded-full hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-colors" title="星標收藏">
+                    <i data-lucide="star" class="w-5 h-5 ${cur.isStarred ? 'fill-amber-400 text-amber-400' : 'text-slate-400'}"></i>
+                </button>
+            `;
 
             if (state.fcMode === 'standard') {
                 if (state.fcPageStep === 1) {
