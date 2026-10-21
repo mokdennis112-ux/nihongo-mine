@@ -476,7 +476,7 @@
                             <div id="fc-top-right-actions" class="flex items-center gap-2" onclick="event.stopPropagation()"></div>
                         </div>
 
-                        <div id="fc-card-content" class="my-auto w-full flex-grow flex flex-col justify-center items-center py-2"></div>
+                        <div id="fc-card-content" class="w-full min-h-0 flex-1 flex flex-col justify-center items-center overflow-hidden"></div>
 
                         <p class="text-xs text-slate-400 flex items-center gap-1 shrink-0 pt-2">
                             <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> <span id="fc-click-hint">點擊卡片切換頁面</span>
@@ -2586,10 +2586,10 @@
 
         function renderFullBackContent(cur) {
             return `
-                <div class="space-y-2.5 w-full max-w-md mx-auto text-center flex flex-col items-center justify-center">
+                <div id="fc-back-fit" class="w-full max-w-md mx-auto text-center flex flex-col items-center justify-center gap-2">
                     <div class="flex items-center justify-center gap-2">
-                        <ruby class="text-3xl sm:text-4xl font-black text-slate-800 dark:text-slate-100 font-jp text-center">
-                            ${cur.word} <rt class="text-xs text-sakura-500 font-medium">${cur.reading || ''}</rt>
+                        <ruby class="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 font-jp text-center leading-tight">
+                            ${cur.word} <rt class="text-[10px] text-sakura-500 font-medium">${cur.reading || ''}</rt>
                         </ruby>
                         <button type="button" onclick="event.stopPropagation(); playWordAudio('${cur.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
                             <i data-lucide="volume-2" class="w-4 h-4"></i>
@@ -2604,7 +2604,7 @@
                         </div>
                     ` : ''}
 
-                    <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-slate-100 leading-snug text-center">${cur.definition}</h3>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-800 dark:text-slate-100 leading-snug text-center">${cur.definition}</h3>
 
                     ${cur.sentence ? `
                         <div class="w-full bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-700/50 space-y-1 flex items-center justify-between gap-2">
@@ -2617,9 +2617,27 @@
                         </div>
                     ` : ''}
 
-                    ${cur.hasImage ? `<img data-fc-image="${cur.id}" alt="" class="max-h-24 sm:max-h-28 rounded-xl border border-slate-200 dark:border-slate-700 mx-auto shadow-md object-cover cursor-pointer hover:scale-105 transition-transform">` : ''}
+                    ${cur.hasImage ? `<img data-fc-image="${cur.id}" alt="" class="max-h-20 sm:max-h-24 w-auto rounded-xl border border-slate-200 dark:border-slate-700 mx-auto shadow-md object-cover cursor-pointer">` : ''}
                 </div>
             `;
+        }
+
+        function fitFlashcardBack() {
+            const host = document.getElementById('fc-card-content');
+            const fit = document.getElementById('fc-back-fit');
+            if (!host) return;
+            if (!fit) {
+                host.style.justifyContent = '';
+                return;
+            }
+            host.style.justifyContent = 'flex-start';
+            fit.style.transform = 'none';
+            const available = host.clientHeight;
+            const needed = fit.scrollHeight;
+            if (!available || needed <= available + 2) return;
+            const scale = Math.max(0.55, Math.min(1, available / needed));
+            fit.style.transformOrigin = 'top center';
+            fit.style.transform = `scale(${scale})`;
         }
 
         function updateFlashcard() {
@@ -2730,12 +2748,14 @@
             lucide.createIcons();
             const fcImg = document.querySelector('[data-fc-image]');
             if (fcImg) {
+                fcImg.onload = () => fitFlashcardBack();
                 dbGetMedia(fcImg.getAttribute('data-fc-image'), 'image').then((src) => {
                     if (!src) return;
                     fcImg.src = src;
                     fcImg.onclick = (e) => { e.stopPropagation(); openImageModal(src); };
                 });
             }
+            requestAnimationFrame(() => fitFlashcardBack());
         }
 
         function nextFlashcard() {
