@@ -72,6 +72,14 @@
 
         input[type="date"] {
             font-family: inherit;
+            min-width: 0;
+            max-width: 100%;
+        }
+        ruby, .card-ruby {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            white-space: normal;
+            max-width: 100%;
         }
 
         .audio-file-input {
@@ -158,7 +166,7 @@
         </div>
     </header>
 
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28">
 
         <!-- ADD TAB -->
         <div id="view-add" class="tab-view space-y-6 max-w-3xl mx-auto">
@@ -356,9 +364,9 @@
                         <div class="flex items-center gap-1.5 flex-wrap">
                             <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
                             <span class="text-[11px] text-slate-400 font-semibold">由</span>
-                            <input type="date" id="filter-date" lang="en-GB" onchange="renderGallery()" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
+                            <input type="date" id="filter-date" lang="en-GB" onchange="renderGallery()" class="px-2 py-2 w-[8.4rem] max-w-[42vw] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
                             <span class="text-[11px] text-slate-400 font-semibold">至</span>
-                            <input type="date" id="filter-date-end" lang="en-GB" onchange="renderGallery()" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
+                            <input type="date" id="filter-date-end" lang="en-GB" onchange="renderGallery()" class="px-2 py-2 w-[8.4rem] max-w-[42vw] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
                             <button type="button" onclick="document.getElementById('filter-date').value=''; document.getElementById('filter-date-end').value=''; renderGallery();" class="text-[11px] text-slate-400 hover:text-rose-500 font-semibold">清除日曆</button>
                         </div>
 
@@ -407,7 +415,7 @@
 
         <!-- FLASHCARDS TAB -->
         <div id="view-cards" class="tab-view hidden max-w-3xl mx-auto space-y-6">
-            <div class="flex flex-col sm:flex-row items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm gap-3">
+            <div class="flex flex-col gap-3 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm">
                 <div class="flex items-center gap-3">
                     <div class="p-2.5 rounded-xl bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500">
                         <i data-lucide="layers" class="w-5 h-5"></i>
@@ -418,22 +426,22 @@
                     </div>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                <div class="flex flex-wrap items-center gap-2 w-full">
                     <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                         <input type="checkbox" id="fc-filter-starred" onchange="setupFlashcards()" class="rounded text-sakura-500 focus:ring-sakura-500">
                         <span>只看星標</span>
                     </label>
 
-                    <div class="flex items-center gap-1 flex-wrap bg-slate-50 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <div class="flex items-center gap-1 flex-wrap max-w-full bg-slate-50 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
                         <span class="text-[10px] text-slate-400 font-semibold">由</span>
-                        <input type="date" id="fc-filter-date" lang="en-GB" onchange="setupFlashcards()" class="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
+                        <input type="date" id="fc-filter-date" lang="en-GB" onchange="setupFlashcards()" class="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none w-[8.4rem] max-w-[42vw]">
                         <span class="text-[10px] text-slate-400 font-semibold">至</span>
-                        <input type="date" id="fc-filter-date-end" lang="en-GB" onchange="setupFlashcards()" class="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none">
+                        <input type="date" id="fc-filter-date-end" lang="en-GB" onchange="setupFlashcards()" class="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none w-[8.4rem] max-w-[42vw]">
                         <button type="button" onclick="document.getElementById('fc-filter-date').value=''; document.getElementById('fc-filter-date-end').value=''; setupFlashcards();" class="text-[10px] text-slate-400 hover:text-rose-500">重置</button>
                     </div>
 
-                    <select id="fc-filter-pos" onchange="setupFlashcards()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                    <select id="fc-filter-pos" onchange="setupFlashcards()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200 max-w-full">
                         <option value="">所有詞性</option>
                         <option value="名詞">名詞</option>
                         <option value="動詞">動詞</option>
@@ -444,14 +452,14 @@
                         <option value="片語/短句">片語/短句</option>
                     </select>
 
-                    <select id="fc-filter-verb-type" onchange="setupFlashcards()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                    <select id="fc-filter-verb-type" onchange="setupFlashcards()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200 max-w-full">
                         <option value="">所有動詞類型</option>
                         <option value="自動詞">自動詞</option>
                         <option value="他動詞">他動詞</option>
                         <option value="自他動詞">自他動詞</option>
                     </select>
 
-                    <select id="fc-mode-select" onchange="changeFcMode()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                    <select id="fc-mode-select" onchange="changeFcMode()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200 max-w-full">
                         <option value="chinese_front">1. 中文模式 (三頁：釋義 -> 手寫板 -> 背面全資料)</option>
                         <option value="audio_only">2. 聽力模式 (聲音在正面 -> 背面全資料)</option>
                         <option value="standard">3. 標準模式 (日語在正面)</option>
@@ -468,12 +476,12 @@
             </div>
 
             <div class="perspective-1000 min-h-[420px]">
-                <div id="flashcard-3d" class="relative w-full h-[420px] rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-800 flex flex-col justify-between overflow-hidden">
+                <div id="flashcard-3d" class="relative w-full h-[min(420px,58dvh)] min-h-[280px] rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-800 flex flex-col justify-between overflow-hidden">
                     
                     <div id="fc-card-body" onclick="flipFlashcard()" class="w-full h-full p-6 sm:p-7 flex flex-col justify-between items-center text-center cursor-pointer">
                         <div class="w-full flex justify-between items-center text-xs font-semibold text-slate-400 shrink-0">
                             <span id="fc-card-label">正面</span>
-                            <div id="fc-top-right-actions" class="flex items-center gap-2" onclick="event.stopPropagation()"></div>
+                            <div id="fc-top-right-actions" class="flex items-center gap-2 relative z-30" onclick="event.stopPropagation()" ontouchstart="event.stopPropagation()" ontouchend="event.stopPropagation()"></div>
                         </div>
 
                         <div id="fc-card-content" class="w-full min-h-0 flex-1 flex flex-col justify-center items-center overflow-hidden"></div>
@@ -1018,14 +1026,12 @@
                         setSyncLabel('雲端檔太大');
                         return;
                     }
-                    const localData = await dbGetAll();
-                    const localMap = new Map(localData.map((item) => [item.id, item]));
                     for (const item of remote) {
                         if (!item || !item.id) continue;
-                        const current = localMap.get(item.id);
+                        const current = await dbGetVocab(item.id);
                         const remoteTime = item.updatedAt || item.createdAt || 0;
                         const localTime = current ? (current.updatedAt || current.createdAt || 0) : -1;
-                        if (current && localTime > remoteTime) continue;
+                        if (current && localTime >= remoteTime) continue;
                         if (item.deleted) {
                             await dbDeleteAllMedia(item.id);
                             await dbSaveVocab(item);
@@ -1039,14 +1045,12 @@
                 }
 
                 if (!remote || !Array.isArray(remote.cards)) return;
-                const localData = await dbGetAll();
-                const localMap = new Map(localData.map((item) => [item.id, item]));
                 for (const item of remote.cards) {
                     if (!item || !item.id) continue;
-                    const current = localMap.get(item.id);
+                    const current = await dbGetVocab(item.id);
                     const remoteTime = item.updatedAt || item.createdAt || 0;
                     const localTime = current ? (current.updatedAt || current.createdAt || 0) : -1;
-                    if (current && localTime > remoteTime) continue;
+                    if (current && localTime >= remoteTime) continue;
                     const clean = { ...item };
                     delete clean.wordAudio;
                     delete clean.audio;
@@ -1359,6 +1363,15 @@
                 store.put(vocab);
                 tx.oncomplete = () => resolve();
                 tx.onerror = (e) => reject(e);
+            });
+        }
+
+        function dbGetVocab(id) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('vocabs', 'readonly');
+                const req = tx.objectStore('vocabs').get(id);
+                req.onsuccess = () => resolve(req.result || null);
+                req.onerror = (e) => reject(e);
             });
         }
 
@@ -1903,32 +1916,40 @@
             switchTab('gallery');
         }
 
+        let starToggleLock = false;
+
         async function toggleStar(id) {
-            const v = state.vocabs.find(x => x.id === id) || (state.fcDeck || []).find(x => x.id === id);
-            if (!v) return;
-            v.isStarred = !v.isStarred;
-            v.updatedAt = Date.now();
-            const starred = !!v.isStarred;
-            await dbSaveVocab(v);
-            await loadVocabs();
-            scheduleSync();
+            if (starToggleLock) return;
+            starToggleLock = true;
+            try {
+                const v = state.vocabs.find(x => x.id === id) || (state.fcDeck || []).find(x => x.id === id);
+                if (!v) return;
+                const next = !v.isStarred;
+                v.isStarred = next;
+                v.updatedAt = Date.now();
+                (state.fcDeck || []).forEach(card => {
+                    if (card.id === id) card.isStarred = next;
+                });
+                if (state.currentTab === 'cards') updateFlashcard();
+                else renderGallery();
 
-            if (state.fcDeck) {
-                const idx = state.fcDeck.findIndex(x => x.id === id);
-                const onlyStar = document.getElementById('fc-filter-starred')?.checked;
-                if (idx !== -1) {
-                    if (onlyStar && !starred) {
-                        state.fcDeck.splice(idx, 1);
-                        if (state.fcIndex > idx) state.fcIndex--;
-                        if (state.fcIndex >= state.fcDeck.length) state.fcIndex = Math.max(0, state.fcDeck.length - 1);
-                        state.fcPageStep = 1;
-                    } else {
-                        state.fcDeck[idx].isStarred = starred;
-                    }
+                await dbSaveVocab(v);
+                await loadVocabs();
+                const fresh = state.vocabs.find(x => x.id === id);
+                if (fresh && !!fresh.isStarred !== next) {
+                    fresh.isStarred = next;
+                    fresh.updatedAt = Date.now();
+                    await dbSaveVocab(fresh);
                 }
+                (state.fcDeck || []).forEach(card => {
+                    if (card.id === id) card.isStarred = next;
+                });
+                if (state.currentTab === 'cards') updateFlashcard();
+                else renderGallery();
+                scheduleSync();
+            } finally {
+                starToggleLock = false;
             }
-
-            if (state.currentTab === 'cards') updateFlashcard();
         }
 
         function switchTab(tabId, saveToStorage = true) {
@@ -2035,7 +2056,7 @@
             if (state.galleryViewMode === 'grid') {
                 container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5";
                 container.innerHTML = filtered.map(v => `
-                    <div class="group bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col justify-between space-y-3 relative">
+                    <div class="group bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col justify-between space-y-3 relative overflow-hidden">
                         <div class="absolute top-1.5 right-1.5 flex items-center gap-0.5 z-20">
                             <button type="button" onclick="toggleStar('${v.id}')" class="text-slate-400 hover:text-amber-400 transition-colors p-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded shadow-sm" title="星標收藏">
                                 <i data-lucide="star" class="w-3 h-3 ${v.isStarred ? 'fill-amber-400 text-amber-400' : ''}"></i>
@@ -2052,10 +2073,10 @@
                         </div>
 
                         <div>
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="space-y-1">
-                                    <div class="flex items-center gap-1.5 flex-wrap">
-                                        <ruby class="text-3xl font-black text-slate-800 dark:text-slate-100 font-jp">
+                            <div class="flex items-start gap-2 min-w-0">
+                                <div class="space-y-1 min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5 flex-wrap min-w-0 pr-16">
+                                        <ruby class="card-ruby text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 font-jp">
                                             ${v.word}
                                             ${v.reading ? `<rt class="text-xs text-sakura-500 font-normal">${v.reading}</rt>` : ''}
                                         </ruby>
@@ -2074,7 +2095,7 @@
                                 </div>
 
                                 ${v.hasImage ? `
-                                    <button type="button" data-thumb-for="${v.id}" onclick="openCardImage('${v.id}')" class="thumb-slot w-36 sm:w-40 h-24 sm:h-28 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-sakura-500 flex items-center justify-center shrink-0 ml-auto -mr-1" title="查看圖片">
+                                    <button type="button" data-thumb-for="${v.id}" onclick="openCardImage('${v.id}')" class="thumb-slot w-24 h-16 sm:w-36 sm:h-24 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-sakura-500 flex items-center justify-center shrink-0 overflow-hidden" title="查看圖片">
                                         <i data-lucide="image" class="w-6 h-6"></i>
                                     </button>
                                 ` : ''}
@@ -2100,7 +2121,7 @@
             } else {
                 container.className = "space-y-3";
                 container.innerHTML = filtered.map(v => `
-                    <div class="group bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
+                    <div class="group bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
                         <div class="absolute top-1 right-1 flex items-center gap-0.5 z-20">
                             <button type="button" onclick="toggleStar('${v.id}')" class="text-slate-400 hover:text-amber-400 transition-colors p-0.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded shadow-sm" title="星標收藏">
                                 <i data-lucide="star" class="w-2.5 h-2.5 ${v.isStarred ? 'fill-amber-400 text-amber-400' : ''}"></i>
@@ -2116,10 +2137,10 @@
                             </button>
                         </div>
 
-                        <div class="flex items-start sm:items-center gap-3 pr-8 flex-grow">
-                            <div class="space-y-1.5 w-full">
+                        <div class="flex items-start sm:items-center gap-3 pr-16 sm:pr-8 flex-grow min-w-0">
+                            <div class="space-y-1.5 w-full min-w-0">
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-lg font-black text-slate-800 dark:text-slate-100 font-jp">${v.word}</span>
+                                    <span class="text-lg font-black text-slate-800 dark:text-slate-100 font-jp break-words">${v.word}</span>
                                     <button type="button" onclick="playWordAudio('${v.id}')" class="p-1.5 rounded-full bg-sakura-50 dark:bg-sakura-900/40 text-sakura-500 hover:bg-sakura-100 transition-colors shadow-sm" title="單詞發音">
                                         <i data-lucide="volume-2" class="w-4 h-4"></i>
                                     </button>
@@ -2143,7 +2164,7 @@
 
                         <div class="shrink-0 flex items-center justify-end">
                             ${v.hasImage ? `
-                                <button type="button" data-thumb-for="${v.id}" onclick="openCardImage('${v.id}')" class="thumb-slot w-44 h-28 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-sakura-500 flex items-center justify-center" title="查看圖片">
+                                <button type="button" data-thumb-for="${v.id}" onclick="openCardImage('${v.id}')" class="thumb-slot w-full max-w-[11rem] h-28 sm:w-44 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-sakura-500 flex items-center justify-center overflow-hidden" title="查看圖片">
                                     <i data-lucide="image" class="w-6 h-6"></i>
                                 </button>
                             ` : `
@@ -2171,7 +2192,7 @@
                 img.src = src;
                 img.alt = '';
                 img.title = '點擊放大圖片';
-                img.className = node.className.replace('thumb-slot', '') + ' object-cover cursor-pointer hover:scale-105 transition-transform shadow-md';
+                img.className = node.className.replace('thumb-slot', '') + ' object-cover cursor-pointer shadow-md max-w-full';
                 img.onclick = () => openImageModal(img.src);
                 node.replaceWith(img);
             };
@@ -2658,7 +2679,7 @@
             document.getElementById('fc-progress').style.width = `${((state.fcIndex + 1) / state.fcDeck.length) * 100}%`;
 
             topRightActions.innerHTML = `
-                <button type="button" onclick="toggleStar('${cur.id}')" class="p-1.5 rounded-full hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-colors" title="星標收藏">
+                <button type="button" onclick="event.preventDefault(); event.stopPropagation(); toggleStar('${cur.id}')" ontouchstart="event.stopPropagation()" ontouchend="event.stopPropagation()" class="p-2 rounded-full hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-colors relative z-30" title="星標收藏">
                     <i data-lucide="star" class="w-5 h-5 ${cur.isStarred ? 'fill-amber-400 text-amber-400' : 'text-slate-400'}"></i>
                 </button>
             `;
@@ -2697,7 +2718,7 @@
                     cardLabel.textContent = "第一頁：中文釋義";
                     clickHint.textContent = "點擊進入【第二頁：手寫練習板】";
                     cardBody.innerHTML = `
-                        <h3 class="text-3xl sm:text-4xl font-extrabold text-slate-800 dark:text-slate-100 text-center">${cur.definition}</h3>
+                        <h3 class="text-2xl sm:text-4xl font-extrabold text-slate-800 dark:text-slate-100 text-center break-words px-1">${cur.definition}</h3>
                     `;
                 } else if (state.fcPageStep === 2) {
                     cardLabel.textContent = "第二頁：手寫畫板";
